@@ -18,8 +18,10 @@ import           Heist
 import           Heist.Interpreted
 
 import qualified Data.Text as T
+import           Data.IORef
 ------------------------------------------------------------------------------
 import           Application
+import           Config
 
 
 ------------------------------------------------------------------------------
@@ -42,5 +44,6 @@ app = makeSnaplet "app" "KiwiMonitor application." Nothing $ do
     h <- nestSnaplet "" heist $ heistInit "templates"
     addRoutes routes
     addSplices splices
-    return $ App h
+    ss <- liftIO $ newIORef False
+    return $ App h ss defaultConfiguration
 

@@ -9,10 +9,17 @@ module Application where
 import Control.Lens
 import Snap.Snaplet
 import Snap.Snaplet.Heist
+import Data.IORef
+
+------------------------------------------------------------------------------
+import Config
+import Status
 
 ------------------------------------------------------------------------------
 data App = App
-    { _heist :: Snaplet (Heist App)
+    { _heist        :: Snaplet (Heist App)
+    , _serverStatus :: IORef Bool
+    , _config       :: Configuration
     }
 
 makeLenses ''App
