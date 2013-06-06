@@ -4,10 +4,15 @@
     <link rel="stylesheet" type="text/css" href="/screen.css"/>
   </head>
   <body>
-    <div id="content">
+    <h1>KiwiMonitor</h1>
 
-      <apply-content/>
-
+    <div id="nav">
+      <navbar/>
     </div>
+
+    <div id="content">
+      <apply-content/>
+    </div>
+
   </body>
 </html>
