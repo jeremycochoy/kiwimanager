@@ -22,6 +22,9 @@ checkStatusAux conf = do
   socket   <- socket AF_INET Stream defaultProtocol
   connect socket mySockAddr
 
+  -- If no exception was throwed, then just close it
+  sClose socket
+
   return True
   where
     socketConfig = defaultHints

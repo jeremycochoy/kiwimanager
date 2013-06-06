@@ -42,7 +42,8 @@ splices = [ ("server_status", statusSplice)
 -- | The status splice
 statusSplice :: SnapletISplice App
 statusSplice = do
-  if False then textSplice "on" else textSplice "off"
+  v <- liftIO $ checkStatus defaultConfiguration
+  if v then textSplice "on" else textSplice "off"
 
 ------------------------------------------------------------------------------
 -- | The application initializer.
