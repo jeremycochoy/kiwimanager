@@ -22,6 +22,7 @@ import           Data.IORef
 ------------------------------------------------------------------------------
 import           Application
 import           Config
+import           Status
 
 
 ------------------------------------------------------------------------------
@@ -33,9 +34,15 @@ routes = [ ("",          serveDirectory "static")
 ------------------------------------------------------------------------------
 -- | The application's splices.
 splices :: [(T.Text, SnapletISplice App)]
-splices = [ ("server_status", textSplice "unknown")
+splices = [ ("server_status", statusSplice)
           , ("navbar",        callTemplate "_nav_non-auth" [])
           ]
+
+------------------------------------------------------------------------------
+-- | The status splice
+statusSplice :: SnapletISplice App
+statusSplice = do
+  if False then textSplice "on" else textSplice "off"
 
 ------------------------------------------------------------------------------
 -- | The application initializer.

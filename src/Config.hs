@@ -1,5 +1,10 @@
 module Config
   ( Configuration,
+    socketHost,
+    socketPort,
+    socketTimeout,
+    socketDelay,
+    gameName,
     defaultConfiguration,
   ) where
 

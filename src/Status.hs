@@ -2,8 +2,30 @@ module Status
     ( checkStatus
     ) where
 
-import Config
+import           Control.Exception
 
-checkStatus :: Configuration -> IO Bool
+import qualified Config as C
+import           Network.Socket
+
+checkStatus :: C.Configuration -> IO Bool
 checkStatus conf = do
-  return False
+  handle ((\_ -> return False) :: SomeException -> IO Bool) (checkStatusAux conf)
+
+checkStatusAux conf = do
+  -- Get address
+  addrInfo <- getAddrInfo (Just socketConfig ) (Just $ C.socketHost conf) Nothing
+  -- Set port
+  let SockAddrInet _ h = (addrAddress $ head addrInfo)
+  let mySockAddr = SockAddrInet (fromIntegral $ C.socketPort conf) h
+
+  -- Create socket and connect
+  socket   <- socket AF_INET Stream defaultProtocol
+  connect socket mySockAddr
+
+  return True
+  where
+    socketConfig = defaultHints
+      { addrFamily = AF_INET
+      , addrSocketType = Stream
+      }
+
