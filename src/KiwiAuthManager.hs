@@ -1,7 +1,10 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module KiwiAuthManager
   (initKiwiAuthManager
   ) where
 
+import           Control.Monad.State
 import           Data.Text (Text)
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth
@@ -16,10 +19,26 @@ initKiwiAuthManager :: (KiwiAuthBackend k) =>
                       -> SnapletLens b SessionManager
                          -- ^ Lens into a 'SessionManager' auth
                       -> k
-initKiwiAuthManager = undefined
+                      -> SnapletInit b (AuthManager b)
+initKiwiAuthManager as sl k = do
+  makeSnaplet
+    "KiwiAuthManager"
+    "A snaplet providing user authentication"
+    Nothing $ liftIO $ do
+      return $! AuthManager
+                       { backend               = SqliteAuthManager
+                       , session               = undefined
+                       , activeUser            = undefined
+                       , minPasswdLen          = undefined
+                       , rememberCookieName    = undefined
+                       , rememberPeriod        = undefined
+                       , siteKey               = undefined
+                       , lockout               = undefined
+                       , randomNumberGenerator = undefined
+                       }
 
 ------------------------------------------------------------------------------
-data SqliteAuthManager = SqliteAuthmanager
+data SqliteAuthManager = SqliteAuthManager
 
 instance IAuthBackend SqliteAuthManager where
   save = error "Save not yet implemented"
