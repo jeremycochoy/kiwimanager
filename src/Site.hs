@@ -23,7 +23,7 @@ import           Data.IORef
 import           Application
 import           Config
 import           Status
-
+import           KiwiAuthManager
 
 ------------------------------------------------------------------------------
 -- | The application's routes.
@@ -46,12 +46,23 @@ statusSplice = do
   if v then textSplice "on" else textSplice "off"
 
 ------------------------------------------------------------------------------
+-- | Heist configuration (used to add splices)
+kiwiHeistConfig :: HeistConfig (Handler App App)
+kiwiHeistConfig = HeistConfig
+                  { hcInterpretedSplices = splices
+                  , hcLoadTimeSplices = []
+                  , hcCompiledSplices = []
+                  , hcAttributeSplices = []
+                  , hcTemplateLocations = []
+                  }
+
+------------------------------------------------------------------------------
 -- | The application initializer.
 app :: SnapletInit App App
 app = makeSnaplet "app" "KiwiMonitor application." Nothing $ do
     h <- nestSnaplet "" heist $ heistInit "templates"
     addRoutes routes
-    addSplices splices
+    addConfig h kiwiHeistConfig
     ss <- liftIO $ newIORef False
     return $ App h ss defaultConfiguration
 
