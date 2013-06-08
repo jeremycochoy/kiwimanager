@@ -34,7 +34,8 @@ Executable kiwimanager
     text                      >= 0.11    && < 0.12,
     time                      >= 1.1     && < 1.5,
     xmlhtml                   >= 0.1,
-    network                   >= 2.4.1.2
+    network                   >= 2.4.1.2,
+    clientsession             >= 0.9
 
   if flag(old-base)
     build-depends:

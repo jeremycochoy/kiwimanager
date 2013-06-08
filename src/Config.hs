@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Config
   ( Configuration,
     socketHost,
@@ -5,20 +7,27 @@ module Config
     socketTimeout,
     socketDelay,
     gameName,
+    sessionTimeout,
+    sessionCookieName,
     defaultConfiguration,
   ) where
 
+import           Data.ByteString (ByteString)
+
 data Configuration = Configuration
     -- | The host name of the server that will be checked
-    { socketHost    :: String
+    { socketHost        :: String
     -- | At wich port the server should be asked
-    , socketPort    :: Int
+    , socketPort        :: Int
     -- | Socket timeout (in ms)
-    , socketTimeout :: Int
+    , socketTimeout     :: Int
     -- | Delay befor checking again the server's status (in seconds)
-    , socketDelay   :: Int
+    , socketDelay       :: Int
 
-    , gameName      :: String
+    , gameName          :: String
+
+    , sessionTimeout    :: Int
+    , sessionCookieName :: ByteString
     }
 
 defaultConfiguration = Configuration
@@ -28,4 +37,7 @@ defaultConfiguration = Configuration
     , socketDelay   = 60
 
     , gameName    = "Kiwi Beta"
+
+    , sessionTimeout    = 3600
+    , sessionCookieName = "kiwi_cookie"
     }

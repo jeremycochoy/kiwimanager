@@ -16,6 +16,7 @@ import           Snap.Snaplet.Heist
 import           Snap.Util.FileServe
 import           Heist
 import           Heist.Interpreted
+import           Snap.Snaplet.Session.Backends.CookieSession
 
 import qualified Data.Text as T
 import           Data.IORef
@@ -60,9 +61,20 @@ kiwiHeistConfig = HeistConfig
 -- | The application initializer.
 app :: SnapletInit App App
 app = makeSnaplet "app" "KiwiMonitor application." Nothing $ do
-    h <- nestSnaplet "" heist $ heistInit "templates"
+    let conf = defaultConfiguration
+    -- Create snaplets
+    h <- nestSnaplet "" heist $
+         heistInit "templates"
+    s <- nestSnaplet "sess" sess $
+         initCookieSessionManager
+           "site_key.txt"
+           (sessionCookieName conf)
+           (Just $ sessionTimeout conf)
+    -- Add routes and splices
     addRoutes routes
     addConfig h kiwiHeistConfig
-    ss <- liftIO $ newIORef False
-    return $ App h ss defaultConfiguration
+    -- Server status ; it's default value is False.
+    st <- liftIO $ newIORef False
+    -- Return a new application
+    return $ App h s undefined st conf
 

@@ -10,6 +10,7 @@ import           Snap.Snaplet
 import           Snap.Snaplet.Auth
 import           Snap.Snaplet.Session
 import           Data.ByteString (ByteString)
+import           Web.ClientSession (getKey)
 
 ------------------------------------------------------------------------------
 -- | Initialize a new sqlite 'AuthManager'
@@ -20,27 +21,29 @@ initKiwiAuthManager :: (KiwiAuthBackend k) =>
                          -- ^ Lens into a 'SessionManager' auth
                       -> k
                       -> SnapletInit b (AuthManager b)
-initKiwiAuthManager as sl k = do
+initKiwiAuthManager s l k = do
   makeSnaplet
     "KiwiAuthManager"
     "A snaplet providing user authentication"
     Nothing $ liftIO $ do
+      key <- getKey $ asSiteKey s
+      rng <- liftIO mkRNG
       return $! AuthManager
-                       { backend               = SqliteAuthManager
-                       , session               = undefined
-                       , activeUser            = undefined
-                       , minPasswdLen          = undefined
-                       , rememberCookieName    = undefined
-                       , rememberPeriod        = undefined
-                       , siteKey               = undefined
-                       , lockout               = undefined
-                       , randomNumberGenerator = undefined
+                       { backend               = KiwiAuthManager
+                       , session               = l
+                       , activeUser            = Nothing
+                       , minPasswdLen          = asMinPasswdLen s
+                       , rememberCookieName    = asRememberCookieName s
+                       , rememberPeriod        = asRememberPeriod s
+                       , siteKey               = key
+                       , lockout               = asLockout s
+                       , randomNumberGenerator = rng
                        }
 
 ------------------------------------------------------------------------------
-data SqliteAuthManager = SqliteAuthManager
+data KiwiAuthManager = KiwiAuthManager
 
-instance IAuthBackend SqliteAuthManager where
+instance IAuthBackend KiwiAuthManager where
   save = error "Save not yet implemented"
   destroy = error "Destroy not yet implemented"
   lookupByUserId = error "lookUpByUserID not yet implemented"
