@@ -120,7 +120,8 @@ app = makeSnaplet "app" "KiwiMonitor application." Nothing $ do
          KAM.initKiwiAuthManager
            defAuthSettings
            sess
-           SqliteKiwiAuthBackend
+           -- TODO : load from config
+           (SqliteKiwiBackend "../server/db/users.s3db" "users" "characters")
     -- Add routes and splices
     addRoutes routes
     addConfig h (kiwiHeistConfig conf)

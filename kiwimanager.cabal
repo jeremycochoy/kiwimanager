@@ -35,7 +35,9 @@ Executable kiwimanager
     time                      >= 1.1     && < 1.5,
     xmlhtml                   >= 0.1,
     network                   >= 2.4.1.2,
-    clientsession             >= 0.9
+    clientsession             >= 0.9,
+    HDBC                      >= 2.3,
+    HDBC-sqlite3              >= 2.3
 
   if flag(old-base)
     build-depends:

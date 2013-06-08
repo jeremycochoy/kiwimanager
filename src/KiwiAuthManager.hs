@@ -1,9 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ExistentialQuantification  #-}
+{-# LANGUAGE RecordWildCards            #-}
 
 module KiwiAuthManager
   ( initKiwiAuthManager
-  , KiwiAuthBackend (register)
+  , KiwiAuthBackend (register, lookupByName, lookupById, delete)
   , registerUser
   ) where
 
@@ -64,8 +65,8 @@ data KiwiAuthManager = forall k. (KiwiAuthBackend k) => KiwiAuthManager
 instance IAuthBackend KiwiAuthManager where
   save = error "Save not yet implemented"
   destroy = error "Destroy not yet implemented"
-  lookupByUserId = error "lookUpByUserId not yet implemented"
-  lookupByLogin = error "lookupByLogin not yet implemented"
+  lookupByUserId KiwiAuthManager{..} uid = lookupById kiwiAuthBackend uid
+  lookupByLogin KiwiAuthManager{..} login = lookupByName kiwiAuthBackend login
   lookupByRememberToken = error "lookupByRememberToken not yet implemented"
 
 ------------------------------------------------------------------------------
@@ -81,15 +82,15 @@ class KiwiAuthBackend r where
               -- ^ Email
           -> IO (Either AuthFailure AuthUser)
   -- | Find the user with this username
-  lookUpByName :: r
+  lookupByName :: r
           -> Text
              -- ^ Username
-          -> IO (Either AuthFailure UserId)
+          -> IO (Maybe AuthUser)
   -- | Find the user with this ID
-  lookUpById :: r
+  lookupById :: r
           -> UserId
              -- ^ User's ID
-          -> IO (Either AuthFailure UserId)
+          -> IO (Maybe AuthUser)
   -- | Delete the user from the database
   delete :: r
          -> UserId
