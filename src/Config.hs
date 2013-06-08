@@ -36,8 +36,11 @@ data Configuration = Configuration
       -- ^ Name of the (crypted) cookie used to store the session
 
     , minUserLen        :: Int
+      -- ^ Min username length
     , maxUserLen        :: Int
+      -- ^ Max username length
     , minPasswordLen    :: Int
+      -- ^ Min password length
     }
 
 defaultConfiguration = Configuration
