@@ -36,9 +36,17 @@ routes = [ ("",          serveDirectory "static")
 
 ------------------------------------------------------------------------------
 -- | The application's splices.
-splices :: [(T.Text, SnapletISplice App)]
-splices = [ ("server_status", statusSplice)
-          ]
+splices :: Configuration -> [(T.Text, SnapletISplice App)]
+splices conf = [ ("server_status", statusSplice)
+               , ("minUserLen", intSplice $ minUserLen conf)
+               , ("maxUserLen", intSplice $ maxUserLen conf)
+               , ("minPasswordLen", intSplice $ minPasswordLen conf)
+               ]
+
+------------------------------------------------------------------------------
+-- | A simple splice that
+intSplice :: Int -> SnapletISplice App
+intSplice = textSplice . T.pack . show
 
 ------------------------------------------------------------------------------
 -- | The status splice
@@ -49,9 +57,9 @@ statusSplice = do
 
 ------------------------------------------------------------------------------
 -- | Heist configuration (used to add splices)
-kiwiHeistConfig :: HeistConfig (Handler App App)
-kiwiHeistConfig = HeistConfig
-                  { hcInterpretedSplices = splices
+kiwiHeistConfig :: Configuration -> HeistConfig (Handler App App)
+kiwiHeistConfig conf = HeistConfig
+                  { hcInterpretedSplices = splices conf
                   , hcLoadTimeSplices = []
                   , hcCompiledSplices = []
                   , hcAttributeSplices = []
@@ -78,7 +86,7 @@ app = makeSnaplet "app" "KiwiMonitor application." Nothing $ do
            SqliteKiwiAuthBackend
     -- Add routes and splices
     addRoutes routes
-    addConfig h kiwiHeistConfig
+    addConfig h (kiwiHeistConfig conf)
     addAuthSplices h auth
     -- Server status ; it's default value is False.
     st <- liftIO $ newIORef False

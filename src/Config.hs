@@ -9,6 +9,9 @@ module Config
     gameName,
     sessionTimeout,
     sessionCookieName,
+    minUserLen,
+    maxUserLen,
+    minPasswordLen,
     defaultConfiguration,
   ) where
 
@@ -31,6 +34,10 @@ data Configuration = Configuration
       -- ^ Time in seconds before the session was closed
     , sessionCookieName :: ByteString
       -- ^ Name of the (crypted) cookie used to store the session
+
+    , minUserLen        :: Int
+    , maxUserLen        :: Int
+    , minPasswordLen    :: Int
     }
 
 defaultConfiguration = Configuration
@@ -43,4 +50,8 @@ defaultConfiguration = Configuration
 
     , sessionTimeout    = 3600
     , sessionCookieName = "kiwi_cookie"
+
+    , minUserLen     = 4
+    , maxUserLen     = 20
+    , minPasswordLen = 5
     }
