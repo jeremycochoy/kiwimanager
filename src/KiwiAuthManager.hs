@@ -1,7 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module KiwiAuthManager
-  (initKiwiAuthManager
+  ( initKiwiAuthManager
+  , KiwiAuthBackend (register)
   ) where
 
 import           Control.Monad.State
@@ -18,7 +19,7 @@ initKiwiAuthManager :: (KiwiAuthBackend k) =>
                          AuthSettings
                          -- ^ Authentication settings for your app
                       -> SnapletLens b SessionManager
-                         -- ^ Lens into a 'SessionManager' auth
+                         -- ^ Lens into a 'SessionManager'
                       -> k
                       -> SnapletInit b (AuthManager b)
 initKiwiAuthManager s l k = do

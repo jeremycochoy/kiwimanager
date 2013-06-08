@@ -13,6 +13,7 @@ import           Data.ByteString (ByteString)
 import           Snap
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist
+import           Snap.Snaplet.Auth
 import           Snap.Util.FileServe
 import           Heist
 import           Heist.Interpreted
@@ -25,6 +26,7 @@ import           Application
 import           Config
 import           Status
 import           KiwiAuthManager
+import           SqliteBackend
 
 ------------------------------------------------------------------------------
 -- | The application's routes.
@@ -70,6 +72,11 @@ app = makeSnaplet "app" "KiwiMonitor application." Nothing $ do
            "site_key.txt"
            (sessionCookieName conf)
            (Just $ sessionTimeout conf)
+    a <- nestSnaplet "auth" auth $
+         initKiwiAuthManager
+           defAuthSettings
+           sess
+           SqliteKiwiAuthBackend
     -- Add routes and splices
     addRoutes routes
     addConfig h kiwiHeistConfig
