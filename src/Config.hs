@@ -15,19 +15,22 @@ module Config
 import           Data.ByteString (ByteString)
 
 data Configuration = Configuration
-    -- | The host name of the server that will be checked
     { socketHost        :: String
-    -- | At wich port the server should be asked
+      -- ^ The host name of the server that will be checked
     , socketPort        :: Int
-    -- | Socket timeout (in ms)
+      -- ^ At wich port the server should be asked
     , socketTimeout     :: Int
-    -- | Delay befor checking again the server's status (in seconds)
+      -- ^ Socket timeout (in ms)
     , socketDelay       :: Int
+      -- ^ Delay befor checking again the server's status (in seconds)
 
     , gameName          :: String
+      -- ^ Name of the game/server
 
     , sessionTimeout    :: Int
+      -- ^ Time in seconds before the session was closed
     , sessionCookieName :: ByteString
+      -- ^ Name of the (crypted) cookie used to store the session
     }
 
 defaultConfiguration = Configuration
