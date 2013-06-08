@@ -7,4 +7,4 @@ import KiwiAuthManager
 data SqliteKiwiAuthBackend = SqliteKiwiAuthBackend
 
 instance KiwiAuthBackend SqliteKiwiAuthBackend where
-  register = undefined
+

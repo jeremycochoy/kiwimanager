@@ -7,7 +7,7 @@
     <h1>KiwiMonitor</h1>
 
     <div id="nav">
-      <navbar/>
+      <apply template="_nav"/>
     </div>
 
     <div id="content">

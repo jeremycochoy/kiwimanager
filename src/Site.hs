@@ -38,7 +38,6 @@ routes = [ ("",          serveDirectory "static")
 -- | The application's splices.
 splices :: [(T.Text, SnapletISplice App)]
 splices = [ ("server_status", statusSplice)
-          , ("navbar",        callTemplate "_nav_non-auth" [])
           ]
 
 ------------------------------------------------------------------------------
@@ -80,8 +79,9 @@ app = makeSnaplet "app" "KiwiMonitor application." Nothing $ do
     -- Add routes and splices
     addRoutes routes
     addConfig h kiwiHeistConfig
+    addAuthSplices h auth
     -- Server status ; it's default value is False.
     st <- liftIO $ newIORef False
     -- Return a new application
-    return $ App h s undefined st conf
+    return $ App h s a st conf
 
