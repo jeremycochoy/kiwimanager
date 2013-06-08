@@ -3,12 +3,13 @@
 module KiwiAuthManager
   ( initKiwiAuthManager
   , KiwiAuthBackend (register)
+  , registerUser
   ) where
 
 import           Control.Monad.State
 import           Data.Text (Text)
 import           Snap.Snaplet
-import           Snap.Snaplet.Auth
+import           Snap.Snaplet.Auth hiding (registerUser)
 import           Snap.Snaplet.Session
 import           Data.ByteString (ByteString)
 import           Web.ClientSession (getKey)
@@ -40,6 +41,19 @@ initKiwiAuthManager s l k = do
                        , lockout               = asLockout s
                        , randomNumberGenerator = rng
                        }
+
+------------------------------------------------------------------------------
+-- | A handler that process a registering form
+registerUser :: ByteString
+                -- ^ Unsername field
+             -> ByteString
+                -- ^ Password field
+             -> ByteString
+                -- ^ Password confirmation field
+             -> ByteString
+                -- ^ E-Mail field
+             -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
+registerUser = error "registerUser not yet implemented"
 
 ------------------------------------------------------------------------------
 data KiwiAuthManager = KiwiAuthManager

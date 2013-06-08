@@ -25,13 +25,49 @@ import           Data.IORef
 import           Application
 import           Config
 import           Status
-import           KiwiAuthManager
+import qualified KiwiAuthManager as KAM
 import           SqliteBackend
+
+------------------------------------------------------------------------------
+handleLoginError :: (HasHeist b) => AuthFailure -> Handler b (AuthManager b) ()
+handleLoginError authFailure = do
+    heistLocal (bindSplices splices) $ render "login"
+  where
+    splices = [("error_message", textSplice error)]
+    error = case authFailure of
+        PasswordMissing -> "Your password is missing."
+        AuthError s     -> T.pack s
+        BackendError    -> "Internal backend error."
+        UserNotFound    -> "Invalid username."
+        UsernameMissing -> "Username missing."
+        PasswordMissing -> "password missing."
+        LockedOut _     -> "You are locked out for a short time."
+        _               -> "Unknown error."
+
+
+handleLogin :: Handler App (AuthManager App) ()
+handleLogin = method GET handleForm <|> handleFormSubmit
+  where
+    handleForm = render "login"
+    handleFormSubmit = do
+      loginUser "login" "password" Nothing
+        handleLoginError
+        (redirect "/")
+
+handleRegister :: Handler App (AuthManager App) ()
+handleRegister = method GET handleForm <|> method POST handleFormSubmit
+  where
+    handleForm = render "register"
+    handleFormSubmit = do
+      KAM.registerUser "login" "password" "confirm_password" "email"
+      return ()
 
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
 routes = [ ("",          serveDirectory "static")
+         , ("login",     with auth handleLogin)
+         , ("register",  with auth handleRegister)
          ]
 
 ------------------------------------------------------------------------------
@@ -80,7 +116,7 @@ app = makeSnaplet "app" "KiwiMonitor application." Nothing $ do
            (sessionCookieName conf)
            (Just $ sessionTimeout conf)
     a <- nestSnaplet "auth" auth $
-         initKiwiAuthManager
+         KAM.initKiwiAuthManager
            defAuthSettings
            sess
            SqliteKiwiAuthBackend
