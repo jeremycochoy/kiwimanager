@@ -88,6 +88,7 @@ intSplice = textSplice . T.pack . show
 -- | The status splice
 statusSplice :: SnapletISplice App
 statusSplice = do
+  -- TODO : Cache status
   v <- liftIO $ checkStatus defaultConfiguration
   if v then textSplice "on" else textSplice "off"
 

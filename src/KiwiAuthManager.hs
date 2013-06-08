@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ExistentialQuantification  #-}
 
 module KiwiAuthManager
   ( initKiwiAuthManager
@@ -31,7 +32,7 @@ initKiwiAuthManager s l k = do
       key <- getKey $ asSiteKey s
       rng <- liftIO mkRNG
       return $! AuthManager
-                       { backend               = KiwiAuthManager
+                       { backend               = KiwiAuthManager k
                        , session               = l
                        , activeUser            = Nothing
                        , minPasswdLen          = asMinPasswdLen s
@@ -56,12 +57,14 @@ registerUser :: ByteString
 registerUser = error "registerUser not yet implemented"
 
 ------------------------------------------------------------------------------
-data KiwiAuthManager = KiwiAuthManager
+data KiwiAuthManager = forall k. (KiwiAuthBackend k) => KiwiAuthManager
+                       { kiwiAuthBackend ::  k
+                       }
 
 instance IAuthBackend KiwiAuthManager where
   save = error "Save not yet implemented"
   destroy = error "Destroy not yet implemented"
-  lookupByUserId = error "lookUpByUserID not yet implemented"
+  lookupByUserId = error "lookUpByUserId not yet implemented"
   lookupByLogin = error "lookupByLogin not yet implemented"
   lookupByRememberToken = error "lookupByRememberToken not yet implemented"
 
@@ -76,4 +79,19 @@ class KiwiAuthBackend r where
               -- ^ Not crypted password
            -> Text
               -- ^ Email
-           -> IO Bool
+          -> IO (Either AuthFailure AuthUser)
+  -- | Find the user with this username
+  lookUpByName :: r
+          -> Text
+             -- ^ Username
+          -> IO (Either AuthFailure UserId)
+  -- | Find the user with this ID
+  lookUpById :: r
+          -> UserId
+             -- ^ User's ID
+          -> IO (Either AuthFailure UserId)
+  -- | Delete the user from the database
+  delete :: r
+         -> UserId
+         -- ^ User's ID
+         -> IO ()
