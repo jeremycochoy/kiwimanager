@@ -141,14 +141,14 @@ registerUser' :: ByteString
                 -- ^ E-Mail field
              -> EitherT AuthFailure (Handler b (AuthManager b)) AuthUser
 registerUser' unf pwdf pwdcf ef = do
-    mbUsername             <- lift $ fmap E.decodeUtf8 <$> getParam unf
-    mbClearPassword        <- lift $ getParam pwdf
-    mbClearConfirmPassword <- lift $ getParam pwdcf
-    mbEmail                <- lift $ fmap E.decodeUtf8 <$> getParam ef
+    mbUsername             <- lift $ (fmap E.decodeUtf8 . empty2Nothing =<<) <$> getParam unf
+    mbClearPassword        <- lift $ (empty2Nothing =<<) <$> getParam pwdf
+    mbClearConfirmPassword <- lift $ (empty2Nothing =<<) <$> getParam pwdcf
+    mbEmail                <- lift $ (fmap E.decodeUtf8 . empty2Nothing =<<) <$> getParam ef
 
-    username             <- noteT PasswordMissing $ hoistMaybe mbUsername
+    username             <- noteT UsernameMissing $ hoistMaybe mbUsername
     clearPassword        <- noteT PasswordMissing $ hoistMaybe mbClearPassword
-    clearConfirmPassword <- noteT UsernameMissing $ hoistMaybe mbClearConfirmPassword
+    clearConfirmPassword <- noteT PasswordMissing $ hoistMaybe mbClearConfirmPassword
     email                <- noteT (AuthError "e") $ hoistMaybe mbEmail
 
     -- Check if no user with the same login exists
@@ -181,9 +181,8 @@ registerUser' unf pwdf pwdcf ef = do
                , userMeta = HM.fromList ["salt" `quickMeta` cryptedPassword]
                }
 
-    eitherRes <- lift $ saveUser authUser
-
-    return authUser
+    mbAuth <- lift $ saveUser authUser
+    hoistEither mbAuth
 
 ------------------------------------------------------------------------------
 data KiwiAuthManager = forall k. (KiwiAuthBackend k) => KiwiAuthManager

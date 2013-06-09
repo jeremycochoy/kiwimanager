@@ -10,6 +10,7 @@ import           Control.Monad.State
 import           Database.HDBC
 import           Database.HDBC.Sqlite3
 import           Snap.Snaplet.Auth
+import           Data.Maybe
 import qualified Data.Text as T
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Aeson.Types as V
@@ -97,10 +98,14 @@ addUser :: SqliteKiwiBackend
         -> T.Text
            -- ^ Email
         -> IO (Either AuthFailure AuthUser)
-addUser SqliteKiwiBackend{..} username password salt email = do
+addUser b@SqliteKiwiBackend{..} username password salt email = do
   _ <- liftIO $ print "getUserLogin"
-  rows <- quickQuery' connection query [toSql username, toSql password, toSql salt, toSql email]
-  error $ show $ rows
+  -- Save user
+  run connection query [toSql username, toSql password, toSql salt, toSql email]
+  -- Load the user and it's id from
+  mbAuthUser <- getUserByName b username
+  commit connection
+  return . Right . fromJust $ mbAuthUser
   where
     query = "INSERT INTO `" ++ userTable ++ "` (`name`, `password`, `salt`, `email`) VALUES (?, ?, ?, ?)"
 

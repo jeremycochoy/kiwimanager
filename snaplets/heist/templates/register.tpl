@@ -1,5 +1,8 @@
 <apply template="_base">
   <form method="post" action="/register">
+  <div id="login_error">
+  <error_message />
+  </div>
   <table id="register_form">
     <tr>
       <td>Login:</td>

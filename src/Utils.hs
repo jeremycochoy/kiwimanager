@@ -2,6 +2,7 @@ module Utils
     ( toHex
     , quickMeta
     , fromMeta
+    , empty2Nothing
     ) where
 
 import           Data.ByteString (ByteString)
@@ -25,3 +26,6 @@ quickMeta name bs = (T.pack name, V.String . T.pack . show $ bs)
 fromMeta :: V.Value -> ByteString
 fromMeta (V.String str) = read . T.unpack $ str
 fromMeta _ = error "Invalid Data.Aeson.Types.Value given to fromMeta!"
+
+empty2Nothing :: ByteString -> Maybe ByteString
+empty2Nothing bs = if (bs == B.empty) then Nothing else Just bs
