@@ -178,7 +178,7 @@ registerUser' unf pwdf pwdcf ef = do
                , userLogin = username
                -- We are lying, the password is actualy encrypted
                , userPassword = Just $ ClearText cryptedPassword
-               , userMeta = HM.fromList ["salt" `quickMeta` cryptedPassword]
+               , userMeta = HM.fromList ["salt" `quickMeta` salt]
                }
 
     mbAuth <- lift $ saveUser authUser
@@ -189,15 +189,30 @@ data KiwiAuthManager = forall k. (KiwiAuthBackend k) => KiwiAuthManager
                        { kiwiAuthBackend ::  k
                        }
 
+------------------------------------------------------------------------------
+-- | Create the user if the field ID is empty. Otherwise, do nothing.
+--   It assume that userEmail, userPassword, and salt fields aren't empty.
+saveImp :: KiwiAuthManager
+        -> AuthUser
+        -> IO (Either AuthFailure AuthUser)
+saveImp KiwiAuthManager{..} authUser =
+  if isJust (userId authUser) then
+    return $ Right authUser
+  else
+    register
+    kiwiAuthBackend
+    login
+    password
+    (fromMeta metaSalt)
+    email
+  where
+    login = userLogin authUser
+    Just (ClearText password) = userPassword authUser
+    Just email = userEmail authUser
+    Just metaSalt = HM.lookup "salt" (userMeta authUser)
+
 instance IAuthBackend KiwiAuthManager where
-  save KiwiAuthManager{..} authUser = if isJust (userId authUser) then
-                          return $ Right authUser
-                        else
-                          register kiwiAuthBackend
-                            (userLogin authUser)
-                            (let Just (ClearText pwd) = userPassword authUser in pwd)
-                            ("emptysalt")
-                            ("emptyemail")
+  save = saveImp
   destroy = error "Destroy not yet implemented"
   lookupByUserId KiwiAuthManager{..} uid = lookupById kiwiAuthBackend uid
   lookupByLogin KiwiAuthManager{..} login = lookupByName kiwiAuthBackend login
