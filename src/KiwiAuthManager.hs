@@ -191,10 +191,14 @@ data KiwiAuthManager = forall k. (KiwiAuthBackend k) => KiwiAuthManager
                        }
 
 instance IAuthBackend KiwiAuthManager where
-  save r authUser = if isJust (userId authUser) then
+  save KiwiAuthManager{..} authUser = if isJust (userId authUser) then
                           return $ Right authUser
                         else
-                          error "Save not yet implemented"
+                          register kiwiAuthBackend
+                            (userLogin authUser)
+                            (let Just (ClearText pwd) = userPassword authUser in pwd)
+                            ("emptysalt")
+                            ("emptyemail")
   destroy = error "Destroy not yet implemented"
   lookupByUserId KiwiAuthManager{..} uid = lookupById kiwiAuthBackend uid
   lookupByLogin KiwiAuthManager{..} login = lookupByName kiwiAuthBackend login
@@ -208,7 +212,9 @@ class KiwiAuthBackend r where
            -> Text
               -- ^ Username
            -> ByteString
-              -- ^ Not crypted password
+              -- ^ Crypted password
+           -> ByteString
+              -- ^ Salt
            -> Text
               -- ^ Email
           -> IO (Either AuthFailure AuthUser)

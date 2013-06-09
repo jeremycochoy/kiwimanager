@@ -86,10 +86,28 @@ computeRows rows = case rows of
         , userMeta = HM.fromList ["salt" `quickMeta` fromSql salt]
         }
 
+addUser :: SqliteKiwiBackend
+           -- ^ Kiwi Backend
+        -> T.Text
+           -- ^ Username
+        -> ByteString
+           -- ^ Crypted password
+        -> ByteString
+           -- ^ Salt
+        -> T.Text
+           -- ^ Email
+        -> IO (Either AuthFailure AuthUser)
+addUser SqliteKiwiBackend{..} username password salt email = do
+  _ <- liftIO $ print "getUserLogin"
+  rows <- quickQuery' connection query [toSql username, toSql password, toSql salt, toSql email]
+  error $ show $ rows
+  where
+    query = "INSERT INTO `" ++ userTable ++ "` (`name`, `password`, `salt`, `email`) VALUES (?, ?, ?, ?)"
+
 
 instance KiwiAuthBackend SqliteKiwiBackend where
   --TODO : do not allow any characters for field username
-  register = error "register not yet implemented"
+  register = addUser
   lookupByName = getUserByName
   lookupById = getUserById
   delete = error "delete not yet implemented"
