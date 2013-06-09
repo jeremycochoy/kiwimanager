@@ -33,16 +33,17 @@ handleLoginError :: (HasHeist b) => AuthFailure -> Handler b (AuthManager b) ()
 handleLoginError authFailure = do
     heistLocal (bindSplices splices) $ render "login"
   where
-    splices = [("error_message", textSplice error)]
-    error = case authFailure of
-        PasswordMissing -> "Your password is missing."
-        AuthError s     -> T.pack s
-        BackendError    -> "Internal backend error."
-        UserNotFound    -> "Invalid username."
-        UsernameMissing -> "Username missing."
-        PasswordMissing -> "password missing."
-        LockedOut _     -> "You are locked out for a short time."
-        _               -> "Unknown error."
+    splices = [("error_message", textSplice err)]
+    err = case authFailure of
+      PasswordMissing   -> "Your password is missing."
+      AuthError s       -> T.pack s
+      BackendError      -> "Internal backend error."
+      UserNotFound      -> "Invalid username."
+      UsernameMissing   -> "Username missing."
+      IncorrectPassword -> "Password incorect."
+      UserNotFound      -> "User not found."
+      LockedOut _       -> "You are locked out for a short time."
+      a                 -> "Unknown error."
 
 
 handleLogin :: Handler App (AuthManager App) ()
@@ -50,7 +51,7 @@ handleLogin = method GET handleForm <|> handleFormSubmit
   where
     handleForm = render "login"
     handleFormSubmit = do
-      loginUser "login" "password" Nothing
+      KAM.loginUser "login" "password" Nothing
         handleLoginError
         (redirect "/")
 
@@ -108,6 +109,13 @@ kiwiHeistConfig conf = HeistConfig
 app :: SnapletInit App App
 app = makeSnaplet "app" "KiwiMonitor application." Nothing $ do
     let conf = defaultConfiguration
+    -- KiwiBackend
+    kiwiDB <- liftIO $ initSqliteKiwiBackend
+              -- TODO : load from config
+              "../server/db/users.s3db"
+              "users"
+              "name"
+              "characters"
     -- Create snaplets
     h <- nestSnaplet "" heist $
          heistInit "templates"
@@ -120,8 +128,7 @@ app = makeSnaplet "app" "KiwiMonitor application." Nothing $ do
          KAM.initKiwiAuthManager
            defAuthSettings
            sess
-           -- TODO : load from config
-           (SqliteKiwiBackend "../server/db/users.s3db" "users" "characters")
+           kiwiDB
     -- Add routes and splices
     addRoutes routes
     addConfig h (kiwiHeistConfig conf)
