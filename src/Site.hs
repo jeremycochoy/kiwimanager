@@ -43,9 +43,11 @@ handleLoginError authFailure = do
       IncorrectPassword -> "Password incorect."
       UserNotFound      -> "User not found."
       LockedOut _       -> "You are locked out for a short time."
-      a                 -> "Unknown error."
+      _                 -> "Unknown error."
 
 
+------------------------------------------------------------------------------
+-- | Display a login form and/or login the user
 handleLogin :: Handler App (AuthManager App) ()
 handleLogin = method GET handleForm <|> handleFormSubmit
   where
@@ -55,6 +57,8 @@ handleLogin = method GET handleForm <|> handleFormSubmit
         handleLoginError
         (redirect "/")
 
+------------------------------------------------------------------------------
+-- | Display a register form and/or register the user
 handleRegister :: Handler App (AuthManager App) ()
 handleRegister = method GET handleForm <|> method POST handleFormSubmit
   where
@@ -64,11 +68,17 @@ handleRegister = method GET handleForm <|> method POST handleFormSubmit
       return ()
 
 ------------------------------------------------------------------------------
+-- | Logs out and redirects the user to "/".
+handleLogout :: Handler App (AuthManager App) ()
+handleLogout = logout >> redirect "/"
+
+------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
 routes = [ ("",          serveDirectory "static")
          , ("login",     with auth handleLogin)
          , ("register",  with auth handleRegister)
+         , ("logout",     with auth handleLogout)
          ]
 
 ------------------------------------------------------------------------------

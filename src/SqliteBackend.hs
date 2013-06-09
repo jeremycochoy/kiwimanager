@@ -53,23 +53,38 @@ getUserByName :: SqliteKiwiBackend
               -> IO (Maybe AuthUser)
 getUserByName SqliteKiwiBackend{..} name = do
   rows <- quickQuery' connection query [toSql . T.unpack $ name]
-  case rows of
-    [] -> return Nothing
-    row : _ -> let [id, password, email, salt, lli, lla, ca] = row in
-      return $ Just defAuthUser
+  computeRows rows
+  where
+    query = "SELECT `id`, `name`, `password`, `email`, `salt`, `lastLoginIp`, `lastLoginAt`, `createdAt` FROM `" ++ userTable ++ "` WHERE `"++ usernameField ++"`=?"
+
+getUserById :: SqliteKiwiBackend
+                 -- ^ Kiwi Backend
+              -> UserId
+                 -- ^ User name
+              -> IO (Maybe AuthUser)
+getUserById SqliteKiwiBackend{..} id = do
+  rows <- quickQuery' connection query [toSql (read . T.unpack . unUid $ id :: Int)]
+  computeRows rows
+  where
+    query = "SELECT `id`, `name`, `password`, `email`, `salt`, `lastLoginIp`, `lastLoginAt`, `createdAt` FROM `" ++ userTable ++ "` WHERE `id`=?"
+
+
+computeRows rows = case rows of
+  [] -> return Nothing
+  row : _ -> let [id, name, password, email, salt, lli, lla, ca] = row in
+    return $ Just defAuthUser
         { userId = Just UserId {unUid = T.pack . show $ (fromSql id :: Int)}
-        , userLogin = name
+        , userLogin = fromSql name
         , userPassword = Just . ClearText . fromSql $ password
         , userEmail = fromSql email
         , userMeta = HM.fromList [(T.pack "salt", V.String . T.pack . show $ (fromSql salt :: ByteString))]
         }
-  where
-    query = "SELECT `id`, `password`, `email`, `salt`, `lastLoginIp`, `lastLoginAt`, `createdAt` FROM `" ++ userTable ++ "` WHERE `"++ usernameField ++"`=?"
+
 
 instance KiwiAuthBackend SqliteKiwiBackend where
   --TODO : do not allow any characters for field username
   register = error "register not yet implemented"
   lookupByName = getUserByName
-  lookupById = error "lookupById not yet implemented"
+  lookupById = getUserById
   delete = error "delete not yet implemented"
 
