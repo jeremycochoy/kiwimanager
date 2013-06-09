@@ -194,7 +194,7 @@ instance IAuthBackend KiwiAuthManager where
   save r authUser = if isJust (userId authUser) then
                           return $ Right authUser
                         else
-                          -- error "Save not yet implemented"
+                          error "Save not yet implemented"
   destroy = error "Destroy not yet implemented"
   lookupByUserId KiwiAuthManager{..} uid = lookupById kiwiAuthBackend uid
   lookupByLogin KiwiAuthManager{..} login = lookupByName kiwiAuthBackend login

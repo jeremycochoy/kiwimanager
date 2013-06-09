@@ -74,6 +74,7 @@ getUserById SqliteKiwiBackend{..} id = do
     query = "SELECT `id`, `name`, `password`, `email`, `salt`, `lastLoginIp`, `lastLoginAt`, `createdAt` FROM `" ++ userTable ++ "` WHERE `id`=?"
 
 
+computeRows :: [[SqlValue]] -> IO (Maybe AuthUser)
 computeRows rows = case rows of
   [] -> return Nothing
   row : _ -> let [id, name, password, email, salt, lli, lla, ca] = row in
