@@ -5,6 +5,8 @@ module SqliteBackend
     ( initSqliteKiwiBackend
     ) where
 
+import           Control.Monad
+import           Control.Monad.State
 import           Database.HDBC
 import           Database.HDBC.Sqlite3
 import           Snap.Snaplet.Auth
@@ -15,6 +17,7 @@ import qualified Data.Text.Encoding as E
 import           Data.ByteString (ByteString)
 
 import           KiwiAuthManager
+import           Utils
 
 
 data SqliteKiwiBackend = SqliteKiwiBackend
@@ -52,6 +55,7 @@ getUserByName :: SqliteKiwiBackend
                  -- ^ User name
               -> IO (Maybe AuthUser)
 getUserByName SqliteKiwiBackend{..} name = do
+  _ <- liftIO $ print "getUserLogin"
   rows <- quickQuery' connection query [toSql . T.unpack $ name]
   computeRows rows
   where
@@ -63,6 +67,7 @@ getUserById :: SqliteKiwiBackend
                  -- ^ User name
               -> IO (Maybe AuthUser)
 getUserById SqliteKiwiBackend{..} id = do
+  _ <- liftIO $ print "getUserID"
   rows <- quickQuery' connection query [toSql (read . T.unpack . unUid $ id :: Int)]
   computeRows rows
   where
@@ -77,7 +82,7 @@ computeRows rows = case rows of
         , userLogin = fromSql name
         , userPassword = Just . ClearText . fromSql $ password
         , userEmail = fromSql email
-        , userMeta = HM.fromList [(T.pack "salt", V.String . T.pack . show $ (fromSql salt :: ByteString))]
+        , userMeta = HM.fromList ["salt" `quickMeta` fromSql salt]
         }
 
 

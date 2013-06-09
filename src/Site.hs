@@ -29,6 +29,7 @@ import qualified KiwiAuthManager as KAM
 import           SqliteBackend
 
 ------------------------------------------------------------------------------
+-- | Display a login form with error messages
 handleLoginError :: (HasHeist b) => AuthFailure -> Handler b (AuthManager b) ()
 handleLoginError authFailure = do
     heistLocal (bindSplices splices) $ render "login"
@@ -57,6 +58,25 @@ handleLogin = method GET handleForm <|> handleFormSubmit
         handleLoginError
         (redirect "/")
 
+
+------------------------------------------------------------------------------
+-- | Display a login form with error messages
+handleRegisterError :: (HasHeist b) => AuthFailure -> Handler b (AuthManager b) ()
+handleRegisterError authFailure = do
+    heistLocal (bindSplices splices) $ render "register"
+  where
+    splices = [("error_message", textSplice err)]
+    err = case authFailure of
+      PasswordMissing   -> "Your password is missing."
+      AuthError s       -> T.pack s
+      BackendError      -> "Internal backend error."
+      UserNotFound      -> "Invalid username."
+      UsernameMissing   -> "Username missing."
+      IncorrectPassword -> "Password incorect."
+      UserNotFound      -> "User not found."
+      LockedOut _       -> "You are locked out for a short time."
+      _                 -> "Unknown error."
+
 ------------------------------------------------------------------------------
 -- | Display a register form and/or register the user
 handleRegister :: Handler App (AuthManager App) ()
@@ -65,7 +85,8 @@ handleRegister = method GET handleForm <|> method POST handleFormSubmit
     handleForm = render "register"
     handleFormSubmit = do
       KAM.registerUser "login" "password" "confirm_password" "email"
-      return ()
+        handleRegisterError
+        (\user -> forceLogin user >> redirect "/")
 
 ------------------------------------------------------------------------------
 -- | Logs out and redirects the user to "/".

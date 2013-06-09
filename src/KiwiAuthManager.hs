@@ -27,6 +27,7 @@ import qualified Data.HashMap.Strict as HM
 import qualified Crypto.Hash.SHA256 as S256
 import           Numeric
 import           Utils
+import           System.Entropy (getEntropy)
 
 ------------------------------------------------------------------------------
 -- | Initialize a new sqlite 'AuthManager'
@@ -93,11 +94,12 @@ loginUser' unf pwdf remf = do
 
 
     mbAuthUser <- lift $ withBackend (\b -> liftIO $ lookupByLogin b tUsername)
-    let authUser = maybe defAuthUser id mbAuthUser
-    let salt = case HM.lookup "salt" (userMeta authUser) of
-          Just (V.String salt) -> read . T.unpack $ salt :: ByteString
-          _ -> B.empty
 
+    authUser <- noteT UserNotFound $ hoistMaybe mbAuthUser
+
+    --TODO: Rewrite using our own error type!
+    salt <- noteT (AuthError "salt") . hoistMaybe $
+            fromMeta <$> HM.lookup "salt" (userMeta authUser)
     let cPassword = hashPassword salt password
 
     EitherT $ loginByUsername tUsername
@@ -120,8 +122,68 @@ registerUser :: ByteString
                 -- ^ Password confirmation field
              -> ByteString
                 -- ^ E-Mail field
-             -> Handler b (AuthManager b) (Either AuthFailure AuthUser)
-registerUser = error "registerUser not yet implemented"
+            -> (AuthFailure -> Handler b (AuthManager b) ())
+               -- ^ Upon failure
+            -> (AuthUser -> Handler b (AuthManager b) ())
+               -- ^ Upon success
+            -> Handler b (AuthManager b) ()
+registerUser unf pwdf pwdcf ef regFail regSucc =
+    runEitherT (registerUser' unf pwdf pwdcf ef)
+    >>= either regFail regSucc
+
+registerUser' :: ByteString
+                -- ^ Unsername field
+             -> ByteString
+                -- ^ Password field
+             -> ByteString
+                -- ^ Password confirmation field
+             -> ByteString
+                -- ^ E-Mail field
+             -> EitherT AuthFailure (Handler b (AuthManager b)) AuthUser
+registerUser' unf pwdf pwdcf ef = do
+    mbUsername             <- lift $ fmap E.decodeUtf8 <$> getParam unf
+    mbClearPassword        <- lift $ getParam pwdf
+    mbClearConfirmPassword <- lift $ getParam pwdcf
+    mbEmail                <- lift $ fmap E.decodeUtf8 <$> getParam ef
+
+    username             <- noteT PasswordMissing $ hoistMaybe mbUsername
+    clearPassword        <- noteT PasswordMissing $ hoistMaybe mbClearPassword
+    clearConfirmPassword <- noteT UsernameMissing $ hoistMaybe mbClearConfirmPassword
+    email                <- noteT (AuthError "e") $ hoistMaybe mbEmail
+
+    -- Check if no user with the same login exists
+    mbUser <- lift $ withBackend (\b -> liftIO $ lookupByLogin b username)
+    _ <- noteT DuplicateLogin . hoistMaybe $ case mbUser of
+        Nothing -> Just ()
+        Just  _ -> Nothing
+
+    -- TODO: Add a check for characters used in username
+    -- TODO: Check fields length!
+    -- TODO: Replace AuthFailure by our own failure type
+
+    -- Create the salt
+    salt <- liftIO $ getEntropy 256
+
+    -- Hash password with the new salt, only if password confirmed
+    cryptedPassword <- noteT IncorrectPassword . hoistMaybe $
+         if (clearPassword == clearConfirmPassword)
+         then Just (hashPassword salt clearPassword)
+         else Nothing
+
+    -- Create a new auth user
+    let authUser = defAuthUser
+               -- Nothing means "save the new user"
+               { userId = Nothing
+               , userEmail = Just email
+               , userLogin = username
+               -- We are lying, the password is actualy encrypted
+               , userPassword = Just $ ClearText cryptedPassword
+               , userMeta = HM.fromList ["salt" `quickMeta` cryptedPassword]
+               }
+
+    eitherRes <- lift $ saveUser authUser
+
+    return authUser
 
 ------------------------------------------------------------------------------
 data KiwiAuthManager = forall k. (KiwiAuthBackend k) => KiwiAuthManager
@@ -132,7 +194,7 @@ instance IAuthBackend KiwiAuthManager where
   save r authUser = if isJust (userId authUser) then
                           return $ Right authUser
                         else
-                          error "Save not yet implemented"
+                          -- error "Save not yet implemented"
   destroy = error "Destroy not yet implemented"
   lookupByUserId KiwiAuthManager{..} uid = lookupById kiwiAuthBackend uid
   lookupByLogin KiwiAuthManager{..} login = lookupByName kiwiAuthBackend login
