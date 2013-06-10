@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Config
-  ( Configuration,
+  ( Configuration (Configuration),
     socketHost,
     socketPort,
     socketTimeout,
@@ -36,9 +36,9 @@ data Configuration = Configuration
       -- ^ Name of the (crypted) cookie used to store the session
 
     , minUserLen        :: Int
-      -- ^ Min username length
+      -- ^ Min username length (included)
     , maxUserLen        :: Int
-      -- ^ Max username length
+      -- ^ Max username length (included)
     , minPasswordLen    :: Int
       -- ^ Min password length
     }

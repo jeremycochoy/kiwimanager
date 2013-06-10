@@ -14,6 +14,7 @@ import           Snap
 import           Snap.Snaplet
 import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Auth
+import qualified Snap.Snaplet.Auth as A
 import           Snap.Util.FileServe
 import           Heist
 import           Heist.Interpreted
@@ -27,6 +28,7 @@ import           Config
 import           Status
 import qualified KiwiAuthManager as KAM
 import           SqliteBackend
+import qualified Types as K
 
 ------------------------------------------------------------------------------
 -- | Display a login form with error messages
@@ -36,14 +38,14 @@ handleLoginError authFailure = do
   where
     splices = [("error_message", textSplice err)]
     err = case authFailure of
-      PasswordMissing   -> "Your password is missing."
-      AuthError s       -> T.pack s
-      BackendError      -> "Internal backend error."
-      UserNotFound      -> "Invalid username."
-      UsernameMissing   -> "Username missing."
-      IncorrectPassword -> "Password incorect."
-      UserNotFound      -> "User not found."
-      LockedOut _       -> "You are locked out for a short time."
+      A.PasswordMissing   -> "Your password is missing."
+      A.AuthError s       -> T.pack s
+      A.BackendError      -> "Internal backend error."
+      A.UserNotFound      -> "Invalid username."
+      A.UsernameMissing   -> "Username missing."
+      A.IncorrectPassword -> "Password incorect."
+      A.UserNotFound      -> "User not found."
+      A.LockedOut _       -> "You are locked out for a short time."
       _                 -> "Unknown error."
 
 
@@ -61,30 +63,32 @@ handleLogin = method GET handleForm <|> handleFormSubmit
 
 ------------------------------------------------------------------------------
 -- | Display a login form with error messages
-handleRegisterError :: (HasHeist b) => AuthFailure -> Handler b (AuthManager b) ()
+handleRegisterError :: (HasHeist b) => K.RegisterFailure -> Handler b (AuthManager b) ()
 handleRegisterError authFailure = do
     heistLocal (bindSplices splices) $ render "register"
   where
     splices = [("error_message", textSplice err)]
     err = case authFailure of
-      PasswordMissing   -> "Your password is missing."
-      AuthError s       -> T.pack s
-      BackendError      -> "Internal backend error."
-      UserNotFound      -> "Invalid username."
-      UsernameMissing   -> "Username missing."
-      IncorrectPassword -> "Password incorect."
-      UserNotFound      -> "User not found."
-      LockedOut _       -> "You are locked out for a short time."
-      _                 -> "Unknown error."
+      K.PasswordMissing      -> "Your password is missing."
+      K.UsernameMissing      -> "Your username is missing."
+      K.UsernameUsed         -> "Username already used."
+      K.EmailMissing         -> "Your email is missing."
+      K.UsernameIllformed    -> "You username is invalid."
+      K.EmailIllformed       -> "Your e-mail is invalid."
+      K.UsernameTooShort     -> "Your username is too short."
+      K.UsernameTooLong      -> "Your username is too long."
+      K.PasswordTooShort     -> "Your password is too short."
+      K.PasswordNotConfirmed -> "Your two password doesn't match."
+      K.UnknownRegisterError -> "Unknown error."
 
 ------------------------------------------------------------------------------
 -- | Display a register form and/or register the user
-handleRegister :: Handler App (AuthManager App) ()
-handleRegister = method GET handleForm <|> method POST handleFormSubmit
+handleRegister :: Configuration -> Handler App (AuthManager App) ()
+handleRegister conf = method GET handleForm <|> method POST handleFormSubmit
   where
     handleForm = render "register"
     handleFormSubmit = do
-      KAM.registerUser "login" "password" "confirm_password" "email"
+      KAM.registerUser conf "login" "password" "confirm_password" "email"
         handleRegisterError
         (\user -> forceLogin user >> redirect "/")
 
@@ -95,12 +99,12 @@ handleLogout = logout >> redirect "/"
 
 ------------------------------------------------------------------------------
 -- | The application's routes.
-routes :: [(ByteString, Handler App App ())]
-routes = [ ("",          serveDirectory "static")
-         , ("login",     with auth handleLogin)
-         , ("register",  with auth handleRegister)
-         , ("logout",     with auth handleLogout)
-         ]
+routes :: Configuration -> [(ByteString, Handler App App ())]
+routes cfg = [ ("",          serveDirectory "static")
+             , ("login",     with auth handleLogin)
+             , ("register",  with auth (handleRegister cfg))
+             , ("logout",    with auth handleLogout)
+             ]
 
 ------------------------------------------------------------------------------
 -- | The application's splices.
@@ -161,7 +165,7 @@ app = makeSnaplet "app" "KiwiMonitor application." Nothing $ do
            sess
            kiwiDB
     -- Add routes and splices
-    addRoutes routes
+    addRoutes (routes conf)
     addConfig h (kiwiHeistConfig conf)
     addAuthSplices h auth
     -- Server status ; it's default value is False.
