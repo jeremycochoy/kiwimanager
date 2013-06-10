@@ -28,6 +28,7 @@ import qualified Crypto.Hash.SHA256 as S256
 import           Numeric
 import           Utils
 import           System.Entropy (getEntropy)
+import qualified Text.Email.Validate as EMail
 
 ------------------------------------------------------------------------------
 -- | Initialize a new sqlite 'AuthManager'
@@ -144,7 +145,7 @@ registerUser' unf pwdf pwdcf ef = do
     mbUsername             <- lift $ (fmap E.decodeUtf8 . empty2Nothing =<<) <$> getParam unf
     mbClearPassword        <- lift $ (empty2Nothing =<<) <$> getParam pwdf
     mbClearConfirmPassword <- lift $ (empty2Nothing =<<) <$> getParam pwdcf
-    mbEmail                <- lift $ (fmap E.decodeUtf8 . empty2Nothing =<<) <$> getParam ef
+    mbEmail                <- lift $ (fmap E.decodeUtf8 . (empty2Nothing =<<) . mfilter EMail.isValid) <$> getParam ef
 
     username             <- noteT UsernameMissing $ hoistMaybe mbUsername
     clearPassword        <- noteT PasswordMissing $ hoistMaybe mbClearPassword

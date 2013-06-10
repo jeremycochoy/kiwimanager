@@ -44,7 +44,8 @@ Executable kiwimanager
     aeson                     >= 0.6.1,
     cryptohash                >= 0.9.0,
     split                     >= 0.2.2,
-    entropy                   >= 0.2.1
+    entropy                   >= 0.2.1,
+    email-validate            >= 1.0.0
 
   if flag(old-base)
     build-depends:
