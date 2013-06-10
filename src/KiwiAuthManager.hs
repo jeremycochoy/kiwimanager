@@ -29,6 +29,7 @@ import qualified Crypto.Hash.SHA256 as S256
 import           Numeric
 import           System.Entropy (getEntropy)
 import qualified Text.Email.Validate as EMail
+import           Text.Regex.Posix
 
 import           Utils
 import qualified Types as K
@@ -161,10 +162,12 @@ registerUser' Configuration{..} unf pwdf pwdcf ef = do
     bsEmail              <- noteT K.EmailMissing    $ hoistMaybe mbEmail
 
     let uLength = T.length username
-    _ <- noteT K.UsernameTooShort . hoistMaybe $ mfilter (>= minUserLen) (Just uLength)
-    _ <- noteT K.UsernameTooLong  . hoistMaybe $ mfilter (<= maxUserLen) (Just uLength)
-    _ <- noteT K.PasswordTooShort . hoistMaybe $ mfilter (>= minPasswordLen)
+    _ <- noteT K.UsernameTooShort  . hoistMaybe $ mfilter (>= minUserLen) (Just uLength)
+    _ <- noteT K.UsernameTooLong   . hoistMaybe $ mfilter (<= maxUserLen) (Just uLength)
+    _ <- noteT K.PasswordTooShort  . hoistMaybe $ mfilter (>= minPasswordLen)
          (Just . B.length $ clearPassword)
+    _ <- noteT K.UsernameIllformed . hoistMaybe $ mfilter (=~ usernameRegex)
+         (Just . T.unpack $ username)
 
     email <- noteT K.EmailIllformed . hoistMaybe $
              E.decodeUtf8 <$> mfilter EMail.isValid (Just bsEmail)

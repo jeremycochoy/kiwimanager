@@ -13,6 +13,7 @@ module Config
     maxUserLen,
     minPasswordLen,
     defaultConfiguration,
+    usernameRegex,
   ) where
 
 import           Data.ByteString (ByteString)
@@ -35,6 +36,8 @@ data Configuration = Configuration
     , sessionCookieName :: ByteString
       -- ^ Name of the (crypted) cookie used to store the session
 
+    , usernameRegex     :: String
+      -- ^ Regexp that username should match
     , minUserLen        :: Int
       -- ^ Min username length (included)
     , maxUserLen        :: Int
@@ -54,6 +57,7 @@ defaultConfiguration = Configuration
     , sessionTimeout    = 3600
     , sessionCookieName = "kiwi_cookie"
 
+    , usernameRegex  = "^([a-zA-Z1-9_-]+)$"
     , minUserLen     = 4
     , maxUserLen     = 20
     , minPasswordLen = 5
