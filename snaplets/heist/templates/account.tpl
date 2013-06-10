@@ -22,11 +22,15 @@
     </tr>
     <tr>
       <td>Last web connection:</td>
-      <td><userLastIg /></td>
+      <td><userLastLoginAt /></td>
     </tr>
     <tr>
       <td>Last in game connection:</td>
       <td><userLastIg /></td>
+    </tr>
+    <tr>
+      <td>Is your account activated:</td>
+      <td><userActive/></td>
     </tr>
   </table>
 </apply>

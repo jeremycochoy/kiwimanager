@@ -157,11 +157,10 @@ app = makeSnaplet "app" "KiwiMonitor application." Nothing $ do
     let conf = defaultConfiguration
     -- KiwiBackend
     kiwiDB <- liftIO $ initSqliteKiwiBackend
-              -- TODO : load from config
-              "../server/db/users.s3db"
-              "users"
-              "name"
-              "characters"
+              (databaseUrl conf)
+              (userTable conf)
+              (usernameField conf)
+              (charactersTable conf)
     -- Create snaplets
     h <- nestSnaplet "" heist $
          heistInit "templates"

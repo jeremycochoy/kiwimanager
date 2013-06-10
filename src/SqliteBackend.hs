@@ -19,6 +19,7 @@ import           Data.ByteString (ByteString)
 
 import           KiwiAuthManager
 import           Utils
+import           Config
 
 
 data SqliteKiwiBackend = SqliteKiwiBackend

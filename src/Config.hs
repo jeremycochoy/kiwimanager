@@ -14,6 +14,10 @@ module Config
     minPasswordLen,
     defaultConfiguration,
     usernameRegex,
+    databaseUrl,
+    userTable,
+    usernameField,
+    charactersTable
   ) where
 
 import           Data.ByteString (ByteString)
@@ -44,6 +48,17 @@ data Configuration = Configuration
       -- ^ Max username length (included)
     , minPasswordLen    :: Int
       -- ^ Min password length
+
+    , databaseUrl       :: String
+      -- ^ Host / file to get the database
+    , userTable         :: String
+      -- ^ Table were user are stored
+    , usernameField     :: String
+      -- ^ name of the username field
+    , charactersTable   :: String
+      -- ^ name of the characters table
+    , characterTable    :: String
+      -- ^ Table were user are stored
     }
 
 defaultConfiguration = Configuration
@@ -61,4 +76,9 @@ defaultConfiguration = Configuration
     , minUserLen     = 4
     , maxUserLen     = 20
     , minPasswordLen = 5
+
+    , databaseUrl     = "../server/db/users.s3db"
+    , userTable       = "users"
+    , usernameField   = "name"
+    , charactersTable = "characters"
     }
