@@ -178,9 +178,6 @@ registerUser' Configuration{..} unf pwdf pwdcf ef = do
         Nothing -> Just ()
         Just  _ -> Nothing
 
-    -- TODO: Add a check for characters used in username
-    -- TODO: Check fields length!
-
     -- Create the salt
     salt <- liftIO $ getEntropy 256
 

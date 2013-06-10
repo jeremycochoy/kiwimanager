@@ -29,6 +29,7 @@ import           Status
 import qualified KiwiAuthManager as KAM
 import           SqliteBackend
 import qualified Types as K
+import           Utils
 
 ------------------------------------------------------------------------------
 -- | Display a login form with error messages
@@ -98,12 +99,22 @@ handleLogout :: Handler App (AuthManager App) ()
 handleLogout = logout >> redirect "/"
 
 ------------------------------------------------------------------------------
+-- | Show account informations
+handleAccount :: Handler App App ()
+handleAccount = do
+  mbAuthUser <- with auth $ currentUser
+  let splices = maybe [] (userISplices) mbAuthUser
+  heistLocal (bindSplices splices) $ render "account"
+
+
+------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: Configuration -> [(ByteString, Handler App App ())]
 routes cfg = [ ("",          serveDirectory "static")
              , ("login",     with auth handleLogin)
              , ("register",  with auth (handleRegister cfg))
              , ("logout",    with auth handleLogout)
+             , ("account",   handleAccount)
              ]
 
 ------------------------------------------------------------------------------
