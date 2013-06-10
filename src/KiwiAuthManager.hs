@@ -158,11 +158,13 @@ registerUser' Configuration{..} unf pwdf pwdcf ef = do
     username             <- noteT K.UsernameMissing $ hoistMaybe mbUsername
     clearPassword        <- noteT K.PasswordMissing $ hoistMaybe mbClearPassword
     clearConfirmPassword <- noteT K.PasswordMissing $ hoistMaybe mbClearConfirmPassword
-    bsEmail              <- noteT undefined       $ hoistMaybe mbEmail
+    bsEmail              <- noteT K.EmailMissing    $ hoistMaybe mbEmail
 
     let uLength = T.length username
     _ <- noteT K.UsernameTooShort . hoistMaybe $ mfilter (>= minUserLen) (Just uLength)
     _ <- noteT K.UsernameTooLong  . hoistMaybe $ mfilter (<= maxUserLen) (Just uLength)
+    _ <- noteT K.PasswordTooShort . hoistMaybe $ mfilter (>= minPasswordLen)
+         (Just . B.length $ clearPassword)
 
     email <- noteT K.EmailIllformed . hoistMaybe $
              E.decodeUtf8 <$> mfilter EMail.isValid (Just bsEmail)

@@ -24,3 +24,9 @@ img {
 #info {
    font-size: 60%;
 }
+#login_error {
+   color: red;
+}
+#register_error {
+   color: red;
+}
