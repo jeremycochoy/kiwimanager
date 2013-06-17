@@ -46,7 +46,7 @@ Executable kiwimanager
     split                     >= 0.2.2,
     entropy                   >= 0.2.1,
     email-validate            >= 1.0.0,
-    regex-posix               >= 0.95
+    regex-posix               >= 0.95.1
 
   if flag(old-base)
     build-depends:
