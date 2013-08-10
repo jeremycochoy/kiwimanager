@@ -10,11 +10,11 @@
     </tr>
     <tr>
       <td>First name:</td>
-      <td><userFirstname /></td>
+      <td><userFirstName /></td>
     </tr>
     <tr>
       <td>Last name:</td>
-      <td><userLastname /></td>
+      <td><userLastName /></td>
     </tr>
     <tr>
       <td>Birthday:</td>

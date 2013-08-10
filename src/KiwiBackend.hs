@@ -1,8 +1,10 @@
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module SqliteBackend
-    ( initSqliteKiwiBackend
+module KiwiBackend
+    ( KiwiBackend,
+      initSqliteKiwiBackend,
+      getUserInfos
     ) where
 
 import           Control.Monad
@@ -22,7 +24,7 @@ import           Utils
 import           Config
 
 
-data SqliteKiwiBackend = SqliteKiwiBackend
+data KiwiBackend = KiwiBackend
                              { connection     :: Connection
                              , userTable      :: String
                              , usernameField  :: String
@@ -36,7 +38,7 @@ initSqliteKiwiBackend :: FilePath
                          -- ^ Username field
                       -> String
                          -- ^ Name of the character table
-                      -> IO (SqliteKiwiBackend)
+                      -> IO (KiwiBackend)
 
 ------------------------------------------------------------------------------
 -- | Create a Sqlite KiwiBackend, used to read/write data about
@@ -44,31 +46,31 @@ initSqliteKiwiBackend :: FilePath
 --   later, we will only need to modify this file.
 initSqliteKiwiBackend path uT uF cT = do
     conn <- connectSqlite3 path
-    return SqliteKiwiBackend
+    return KiwiBackend
            { connection = conn
            , userTable = uT
            , usernameField = uF
            , characterTable = cT
            }
 
-getUserByName :: SqliteKiwiBackend
+getUserByName :: KiwiBackend
                  -- ^ Kiwi Backend
               -> T.Text
                  -- ^ User name
               -> IO (Maybe AuthUser)
-getUserByName SqliteKiwiBackend{..} name = do
+getUserByName KiwiBackend{..} name = do
   _ <- liftIO $ print "getUserLogin"
   rows <- quickQuery' connection query [toSql . T.unpack $ name]
   computeRows rows
   where
     query = "SELECT `id`, `name`, `password`, `email`, `salt`, `lastLoginIp`, `lastLoginAt`, `createdAt` FROM `" ++ userTable ++ "` WHERE `"++ usernameField ++"`=?"
 
-getUserById :: SqliteKiwiBackend
+getUserById :: KiwiBackend
                  -- ^ Kiwi Backend
               -> UserId
                  -- ^ User name
               -> IO (Maybe AuthUser)
-getUserById SqliteKiwiBackend{..} id = do
+getUserById KiwiBackend{..} id = do
   _ <- liftIO $ print "getUserID"
   rows <- quickQuery' connection query [toSql (read . T.unpack . unUid $ id :: Int)]
   computeRows rows
@@ -88,7 +90,18 @@ computeRows rows = case rows of
         , userMeta = HM.fromList ["salt" `quickMeta` fromSql salt]
         }
 
-addUser :: SqliteKiwiBackend
+getUserInfos :: KiwiBackend -> UserId -> IO [(String, String)]
+getUserInfos KiwiBackend{..} id = do
+  rows <- quickQuery' connection query [toSql (read . T.unpack . unUid $ id :: Int)]
+  return $ case rows of
+    row : _ -> zip fields (map fromSql row)
+    _       -> []
+  where
+    fields = ["userName", "userEmail", "userFirstName", "userLastName", "userBirthday",
+              "userLastLoginIp", "userLastLoginAt", "userCreatedAt"]
+    query = "SELECT `name`, `email`, `first_name`, `last_name`, `birthday`, `lastLoginIp`, `lastLoginAt`, `createdAt` FROM `" ++ userTable ++ "` WHERE `id`=?"
+
+addUser :: KiwiBackend
            -- ^ Kiwi Backend
         -> T.Text
            -- ^ Username
@@ -99,7 +112,7 @@ addUser :: SqliteKiwiBackend
         -> T.Text
            -- ^ Email
         -> IO (Either AuthFailure AuthUser)
-addUser b@SqliteKiwiBackend{..} username password salt email = do
+addUser b@KiwiBackend{..} username password salt email = do
   _ <- liftIO $ print "getUserLogin"
   -- Save user
   run connection query [toSql username, toSql password, toSql salt, toSql email]
@@ -111,7 +124,7 @@ addUser b@SqliteKiwiBackend{..} username password salt email = do
     query = "INSERT INTO `" ++ userTable ++ "` (`name`, `password`, `salt`, `email`) VALUES (?, ?, ?, ?)"
 
 
-instance KiwiAuthBackend SqliteKiwiBackend where
+instance KiwiAuthBackend KiwiBackend where
   --TODO : do not allow any characters for field username
   register = addUser
   lookupByName = getUserByName

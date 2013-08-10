@@ -9,6 +9,7 @@ module Site
   ) where
 
 ------------------------------------------------------------------------------
+import           Control.Applicative
 import           Data.ByteString (ByteString)
 import           Snap
 import           Snap.Snaplet
@@ -25,9 +26,10 @@ import           Data.IORef
 ------------------------------------------------------------------------------
 import           Application
 import           Config
+import           KiwiConfiguration as C
 import           Status
 import qualified KiwiAuthManager as KAM
-import           SqliteBackend
+import           KiwiBackend
 import qualified Types as K
 import           Utils
 
@@ -47,7 +49,7 @@ handleLoginError authFailure = do
       A.IncorrectPassword -> "Password incorect."
       A.UserNotFound      -> "User not found."
       A.LockedOut _       -> "You are locked out for a short time."
-      _                 -> "Unknown error."
+      _                   -> "Unknown error."
 
 
 ------------------------------------------------------------------------------
@@ -84,12 +86,12 @@ handleRegisterError authFailure = do
 
 ------------------------------------------------------------------------------
 -- | Display a register form and/or register the user
-handleRegister :: Configuration -> Handler App (AuthManager App) ()
-handleRegister conf = method GET handleForm <|> method POST handleFormSubmit
+handleRegister :: Handler App (AuthManager App) ()
+handleRegister = method GET handleForm <|> method POST handleFormSubmit
   where
     handleForm = render "register"
     handleFormSubmit = do
-      KAM.registerUser conf "login" "password" "confirm_password" "email"
+      KAM.registerUser config "login" "password" "confirm_password" "email"
         handleRegisterError
         (\user -> forceLogin user >> redirect "/")
 
@@ -103,28 +105,40 @@ handleLogout = logout >> redirect "/"
 handleAccount :: Handler App App ()
 handleAccount = do
   mbAuthUser <- with auth $ currentUser
-  let splices = maybe [] (userISplices) mbAuthUser
-  heistLocal (bindSplices splices) $ render "account"
+  case mbAuthUser of
+    Nothing -> redirect "/"
+    Just authUser -> case userId authUser of
+      Nothing -> redirect "/"
+      Just uid -> do
+        let authSplices = userISplices authUser
+        kiwiDB <- gets _kiwiDB
+        infos  <-liftIO $ getUserInfos kiwiDB uid
+        let userInfosSplices = map (\(a, b) -> (T.pack a, textSplice . T.pack $ b)) infos
+        let splices = userInfosSplices ++ authSplices
+        renderAccount splices
+  where
+    renderAccount splices = heistLocal (bindSplices splices) $ render "account"
 
 
 ------------------------------------------------------------------------------
 -- | The application's routes.
-routes :: Configuration -> [(ByteString, Handler App App ())]
-routes cfg = [ ("",          serveDirectory "static")
-             , ("login",     with auth handleLogin)
-             , ("register",  with auth (handleRegister cfg))
-             , ("logout",    with auth handleLogout)
-             , ("account",   handleAccount)
-             ]
+routes :: [(ByteString, Handler App App ())]
+routes = [ ("",          serveDirectory "static")
+         , ("login",     with auth handleLogin)
+         , ("register",  with auth handleRegister)
+         , ("logout",    with auth handleLogout)
+         , ("account",   handleAccount)
+         ]
 
 ------------------------------------------------------------------------------
 -- | The application's splices.
-splices :: Configuration -> [(T.Text, SnapletISplice App)]
-splices conf = [ ("server_status", statusSplice)
-               , ("minUserLen", intSplice $ minUserLen conf)
-               , ("maxUserLen", intSplice $ maxUserLen conf)
-               , ("minPasswordLen", intSplice $ minPasswordLen conf)
-               ]
+splices :: [(T.Text, SnapletISplice App)]
+splices = [ ("server_status", statusSplice)
+          , ("minUserLen", intSplice $ minUserLen config)
+          , ("maxUserLen", intSplice $ maxUserLen config)
+          , ("minPasswordLen", intSplice $ minPasswordLen config)
+          , ("error_message", textSplice "")
+          ]
 
 ------------------------------------------------------------------------------
 -- | A simple splice that
@@ -136,14 +150,21 @@ intSplice = textSplice . T.pack . show
 statusSplice :: SnapletISplice App
 statusSplice = do
   -- TODO : Cache status
-  v <- liftIO $ checkStatus defaultConfiguration
+  st <- liftIO $ checkStatus
+
+  -- Write/Read the serverStatus
+  ioRef <- gets _serverStatus
+  liftIO $ writeIORef ioRef st
+  v <- liftIO$ readIORef ioRef
+
+  -- Display image on/off
   if v then textSplice "on" else textSplice "off"
 
 ------------------------------------------------------------------------------
 -- | Heist configuration (used to add splices)
-kiwiHeistConfig :: Configuration -> HeistConfig (Handler App App)
-kiwiHeistConfig conf = HeistConfig
-                  { hcInterpretedSplices = splices conf
+kiwiHeistConfig :: HeistConfig (Handler App App)
+kiwiHeistConfig = HeistConfig
+                  { hcInterpretedSplices = splices
                   , hcLoadTimeSplices = []
                   , hcCompiledSplices = []
                   , hcAttributeSplices = []
@@ -154,32 +175,31 @@ kiwiHeistConfig conf = HeistConfig
 -- | The application initializer.
 app :: SnapletInit App App
 app = makeSnaplet "app" "KiwiMonitor application." Nothing $ do
-    let conf = defaultConfiguration
     -- KiwiBackend
     kiwiDB <- liftIO $ initSqliteKiwiBackend
-              (databaseUrl conf)
-              (userTable conf)
-              (usernameField conf)
-              (charactersTable conf)
+              (databaseUrl config)
+              (userTable config)
+              (usernameField config)
+              (characterTable config)
     -- Create snaplets
     h <- nestSnaplet "" heist $
          heistInit "templates"
     s <- nestSnaplet "sess" sess $
          initCookieSessionManager
            "site_key.txt"
-           (sessionCookieName conf)
-           (Just $ sessionTimeout conf)
+           (sessionCookieName config)
+           (Just $ sessionTimeout config)
     a <- nestSnaplet "auth" auth $
          KAM.initKiwiAuthManager
            defAuthSettings
            sess
            kiwiDB
     -- Add routes and splices
-    addRoutes (routes conf)
-    addConfig h (kiwiHeistConfig conf)
+    addRoutes routes
+    addConfig h kiwiHeistConfig
     addAuthSplices h auth
     -- Server status ; it's default value is False.
     st <- liftIO $ newIORef False
     -- Return a new application
-    return $ App h s a st conf
+    return $ App h s a st kiwiDB
 

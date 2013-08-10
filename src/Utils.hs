@@ -6,7 +6,6 @@ module Utils
     , quickMeta
     , fromMeta
     , empty2Nothing
-    , userISplices
     ) where
 
 import           Data.Maybe
@@ -38,23 +37,3 @@ fromMeta _ = error "Invalid Data.Aeson.Types.Value given to fromMeta!"
 
 empty2Nothing :: ByteString -> Maybe ByteString
 empty2Nothing bs = if (bs == B.empty) then Nothing else Just bs
-
-------------------------------------------------------------------------------
--- | Function to generate interpreted splices from an AuthUser.
---   It comes from an unexported function of Snap.Snaplet.Auth.SpliceHelpers
-userISplices :: Monad m => A.AuthUser -> [(T.Text, I.Splice m)]
-userISplices A.AuthUser{..} =
-    [ ("userId", I.textSplice $ maybe "-" A.unUid userId)
-    , ("userLogin", I.textSplice userLogin)
-    , ("userEmail", I.textSplice $ fromMaybe "-" userEmail)
-    , ("userActive", I.textSplice $ T.pack $ show $ isNothing userSuspendedAt)
-    , ("userLoginCount", I.textSplice $ T.pack $ show userLoginCount)
-    , ("userFailedCount", I.textSplice $ T.pack $ show userFailedLoginCount)
-    , ("userLoginAt", I.textSplice $ maybe "-" (T.pack . show) userCurrentLoginAt)
-    , ("userLastLoginAt", I.textSplice $ maybe "-" (T.pack . show) userLastLoginAt)
-    , ("userSuspendedAt", I.textSplice $ maybe "-" (T.pack . show) userSuspendedAt)
-    , ("userLoginIP", I.textSplice $ maybe "-" E.decodeUtf8 userCurrentLoginIp)
-    , ("userLastLoginIP", I.textSplice $ maybe "-" E.decodeUtf8 userLastLoginIp)
-    , ("userIfActive", ifISplice (isNothing userSuspendedAt))
-    , ("userIfSuspended", ifISplice (isJust userSuspendedAt))
-    ]

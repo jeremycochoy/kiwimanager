@@ -33,10 +33,10 @@ import           Text.Regex.Posix
 
 import           Utils
 import qualified Types as K
-import           Config
+import           KiwiConfiguration
 
 ------------------------------------------------------------------------------
--- | Initialize a new sqlite 'AuthManager'
+-- | Initialize a new 'AuthManager'.
 initKiwiAuthManager :: (KiwiAuthBackend k) =>
                          AuthSettings
                          -- ^ Authentication settings for your app

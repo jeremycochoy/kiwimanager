@@ -11,10 +11,10 @@ import Snap.Snaplet
 import Snap.Snaplet.Heist
 import Snap.Snaplet.Auth
 import Snap.Snaplet.Session
+import KiwiBackend
 import Data.IORef
 
 ------------------------------------------------------------------------------
-import Config
 import Status
 
 ------------------------------------------------------------------------------
@@ -23,7 +23,7 @@ data App = App
     , _sess         :: Snaplet SessionManager
     , _auth         :: Snaplet (AuthManager App)
     , _serverStatus :: IORef Bool
-    , _config       :: Configuration
+    , _kiwiDB       :: KiwiBackend
     }
 
 makeLenses ''App

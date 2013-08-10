@@ -3,20 +3,21 @@ module Status
     ) where
 
 import           Control.Exception
-
-import qualified Config as C
 import           Network.Socket
 
-checkStatus :: C.Configuration -> IO Bool
-checkStatus conf = do
-  handle ((\_ -> return False) :: SomeException -> IO Bool) (checkStatusAux conf)
+import qualified KiwiConfiguration as C
+import qualified Config as C
 
-checkStatusAux conf = do
+checkStatus :: IO Bool
+checkStatus = do
+  handle ((\_ -> return False) :: SomeException -> IO Bool) checkStatusAux
+
+checkStatusAux = do
   -- Get address
-  addrInfo <- getAddrInfo (Just socketConfig ) (Just $ C.socketHost conf) Nothing
+  addrInfo <- getAddrInfo (Just socketConfig ) (Just $ C.socketHost C.config) Nothing
   -- Set port
   let SockAddrInet _ h = (addrAddress $ head addrInfo)
-  let mySockAddr = SockAddrInet (fromIntegral $ C.socketPort conf) h
+  let mySockAddr = SockAddrInet (fromIntegral $ C.socketPort C.config) h
 
   -- Create socket and connect
   socket   <- socket AF_INET Stream defaultProtocol
