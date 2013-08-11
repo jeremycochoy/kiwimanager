@@ -37,7 +37,7 @@ Executable kiwimanager
     network                   >= 2.4.1.2,
     -- We need to restric cipher-aes version to make clientsession compile.
     clientsession             >= 0.9,
-    cipher-aes                >= 0.1.8   && < 0.9,
+    cipher-aes                >= 0.1.8   && < 0.2,
     --
     HDBC                      >= 2.3,
     HDBC-sqlite3              >= 2.3,
