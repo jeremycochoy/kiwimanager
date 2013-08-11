@@ -1,22 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module KiwiConfiguration
-  ( Configuration (Configuration),
-    socketHost,
-    socketPort,
-    socketTimeout,
-    socketDelay,
-    gameName,
-    sessionTimeout,
-    sessionCookieName,
-    minUserLen,
-    maxUserLen,
-    minPasswordLen,
-    usernameRegex,
-    databaseUrl,
-    userTable,
-    usernameField,
-    characterTable,
+  ( Configuration (..),
     defaultConfiguration,
   ) where
 
@@ -53,8 +38,6 @@ data Configuration = Configuration
       -- ^ Host / file to get the database
     , userTable         :: String
       -- ^ Table were user are stored
-    , usernameField     :: String
-      -- ^ name of the username field
     , characterTable    :: String
       -- ^ Table were user are stored
     }
@@ -77,6 +60,5 @@ defaultConfiguration = Configuration
 
     , databaseUrl     = "database"
     , userTable       = "users"
-    , usernameField   = "name"
     , characterTable = "characters"
     }

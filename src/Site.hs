@@ -207,7 +207,6 @@ app = makeSnaplet "app" "KiwiMonitor application." Nothing $ do
     kiwiDB <- liftIO $ initSqliteKiwiBackend
               (databaseUrl config)
               (userTable config)
-              (usernameField config)
               (characterTable config)
     -- Create snaplets
     h <- nestSnaplet "" heist $

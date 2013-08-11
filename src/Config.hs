@@ -20,8 +20,7 @@ config = defaultConfiguration
     , maxUserLen     = 20
     , minPasswordLen = 5
 
-    , databaseUrl     = "../server/db/users.s3db"
+    , databaseUrl     = "postgresql://mmorpg@localhost/users?connect_timeout=10&application_name=kiwimanager"
     , userTable       = "users"
-    , usernameField   = "name"
     , characterTable = "characters"
     }

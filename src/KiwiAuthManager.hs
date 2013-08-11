@@ -107,6 +107,7 @@ loginUser' unf pwdf remf = do
             fromMeta <$> HM.lookup "salt" (userMeta authUser)
     let cPassword = hashPassword salt password
 
+    error. show $ (password, userPassword authUser, salt, cPassword)
     EitherT $ loginByUsername tUsername
                               (ClearText cPassword) remember
 

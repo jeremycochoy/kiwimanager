@@ -14,7 +14,7 @@ module KiwiBackend
 import           Control.Monad
 import           Control.Monad.State
 import           Database.HDBC
-import           Database.HDBC.Sqlite3
+import           Database.HDBC.PostgreSQL
 import           Snap.Snaplet.Auth
 import           Data.Maybe
 import qualified Data.Text as T
@@ -32,15 +32,12 @@ import           Config
 data KiwiBackend = KiwiBackend
                              { connection     :: Connection
                              , userTable      :: String
-                             , usernameField  :: String
                              , characterTable :: String
                              }
 initSqliteKiwiBackend :: FilePath
                          -- ^ File where is the user database
                       -> String
                          -- ^ Name of the user table
-                      -> String
-                         -- ^ Username field
                       -> String
                          -- ^ Name of the character table
                       -> IO (KiwiBackend)
@@ -49,12 +46,11 @@ initSqliteKiwiBackend :: FilePath
 -- | Create a Sqlite KiwiBackend, used to read/write data about
 --   characters/users in the database. If we want to change the database
 --   later, we will only need to modify this file.
-initSqliteKiwiBackend path uT uF cT = do
-    conn <- connectSqlite3 path
+initSqliteKiwiBackend url uT cT = do
+    conn <- connectPostgreSQL url
     return KiwiBackend
            { connection = conn
            , userTable = uT
-           , usernameField = uF
            , characterTable = cT
            }
 
@@ -68,7 +64,7 @@ getUserByName KiwiBackend{..} name = do
   rows <- quickQuery' connection query [toSql . T.unpack $ name]
   computeRows rows
   where
-    query = "SELECT `id`, `name`, `password`, `email`, `salt`, `lastLoginIp`, `lastLoginAt`, `createdAt` FROM `" ++ userTable ++ "` WHERE `"++ usernameField ++"`=?"
+    query = "SELECT id, name, password, email, salt, last_login_ip, last_login_at, created_at FROM " ++ userTable ++ " WHERE name=?"
 
 getUserById :: KiwiBackend
                  -- ^ Kiwi Backend
@@ -80,7 +76,7 @@ getUserById KiwiBackend{..} id = do
   rows <- quickQuery' connection query [toSql (read . T.unpack . unUid $ id :: Int)]
   computeRows rows
   where
-    query = "SELECT `id`, `name`, `password`, `email`, `salt`, `lastLoginIp`, `lastLoginAt`, `createdAt` FROM `" ++ userTable ++ "` WHERE `id`=?"
+    query = "SELECT id, name, password, email, salt, last_login_ip, last_login_at, created_at FROM " ++ userTable ++ " WHERE id=?"
 
 
 computeRows :: [[SqlValue]] -> IO (Maybe AuthUser)
@@ -105,7 +101,7 @@ getUserInfos KiwiBackend{..} id = do
     getVal = either (\_ -> "") (\s -> s) . safeFromSql
     fields = ["userName", "userEmail", "userFirstName", "userLastName", "userBirthday",
               "userLastLoginIp", "userLastLoginAt", "userCreatedAt"]
-    query = "SELECT `name`, `email`, `first_name`, `last_name`, `birthday`, lastLoginIp, lastLoginAt, createdAt FROM `" ++ userTable ++ "` WHERE `id`=?"
+    query = "SELECT name, email, first_name, last_name, birthday, last_login_ip, last_login_at, created_at FROM " ++ userTable ++ " WHERE id=?"
 
 addUser :: KiwiBackend
            -- ^ Kiwi Backend
@@ -121,22 +117,22 @@ addUser :: KiwiBackend
 addUser b@KiwiBackend{..} username password salt email = do
   _ <- liftIO $ print "getUserLogin"
   -- Save user
-  run connection query [toSql username, toSql password, toSql salt, toSql email]
+  run connection query [toSql username, toSql password, toSql email]
   -- Load the user and it's id from
   mbAuthUser <- getUserByName b username
   commit connection
   return . Right . fromJust $ mbAuthUser
   where
-    query = "INSERT INTO `" ++ userTable ++ "` (`name`, `password`, `salt`, `email`) VALUES (?, ?, ?, ?)"
+    query = "INSERT INTO " ++ userTable ++ " (name, password, salt, email) VALUES (?, ?, E'\\x" ++ toHex salt ++ "', ?)"
 
 getCharacters :: KiwiBackend -> UserId -> IO [Character]
 getCharacters KiwiBackend{..} userId = do
   rows <- quickQuery' connection query [toSql (read . T.unpack . unUid $ userId :: Int)]
   return $ map computeChar rows
   where
-    query = "SELECT `name`, `type`, `lvl`, `state_pts`, `int`, `for`, `dex`, `agi`, "
-            ++ "`vit`, `exp`, `pos_x`, `pos_y` "
-            ++ "FROM `" ++ characterTable ++ "` WHERE `user_id`=?"
+    query = "SELECT name, type, lvl, state_pts, int, str, dex, agi, "
+            ++ "vit, exp, pos_x, pos_y "
+            ++ "FROM " ++ characterTable ++ " WHERE user_id=?"
     computeChar [name, ctype, lvl, statePts, int, str, dex, agi, vit, exp, posX, posY] =
       Character { cName     = fromSql name
                 , cLevel    = fromSql ctype
