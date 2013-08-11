@@ -4,7 +4,6 @@
 
 module KiwiAuthManager
   ( initKiwiAuthManager
-  , KiwiAuthBackend (register, lookupByName, lookupById, delete)
   , registerUser
   , loginUser
   ) where
@@ -34,15 +33,15 @@ import           Text.Regex.Posix
 import           Utils
 import qualified Types as K
 import           KiwiConfiguration
+import           KiwiBackend
 
 ------------------------------------------------------------------------------
 -- | Initialize a new 'AuthManager'.
-initKiwiAuthManager :: (KiwiAuthBackend k) =>
-                         AuthSettings
+initKiwiAuthManager :: AuthSettings
                          -- ^ Authentication settings for your app
                       -> SnapletLens b SessionManager
                          -- ^ Lens into a 'SessionManager'
-                      -> k
+                      -> KiwiBackend
                       -> SnapletInit b (AuthManager b)
 initKiwiAuthManager s l k = do
   makeSnaplet
@@ -204,9 +203,7 @@ registerUser' Configuration{..} unf pwdf pwdcf ef = do
       Right auth -> right auth
 
 ------------------------------------------------------------------------------
-data KiwiAuthManager = forall k. (KiwiAuthBackend k) => KiwiAuthManager
-                       { kiwiAuthBackend ::  k
-                       }
+data KiwiAuthManager = KiwiAuthManager { kiwiAuthBackend ::  KiwiBackend }
 
 ------------------------------------------------------------------------------
 -- | Create the user if the field ID is empty. Otherwise, do nothing.
@@ -218,7 +215,7 @@ saveImp KiwiAuthManager{..} authUser =
   if isJust (userId authUser) then
     return $ Right authUser
   else
-    register
+    addUser
     kiwiAuthBackend
     login
     password
@@ -233,36 +230,6 @@ saveImp KiwiAuthManager{..} authUser =
 instance IAuthBackend KiwiAuthManager where
   save = saveImp
   destroy = error "Destroy not yet implemented"
-  lookupByUserId KiwiAuthManager{..} uid = lookupById kiwiAuthBackend uid
-  lookupByLogin KiwiAuthManager{..} login = lookupByName kiwiAuthBackend login
+  lookupByUserId KiwiAuthManager{..} uid = getUserById kiwiAuthBackend uid
+  lookupByLogin KiwiAuthManager{..} login = getUserByName kiwiAuthBackend login
   lookupByRememberToken = error "lookupByRememberToken not yet implemented"
-
-------------------------------------------------------------------------------
-class KiwiAuthBackend r where
-  -- | Create a user from a username, a password and an email.
-  --   Should return false if it failed.
-  register :: r
-           -> Text
-              -- ^ Username
-           -> ByteString
-              -- ^ Crypted password
-           -> ByteString
-              -- ^ Salt
-           -> Text
-              -- ^ Email
-          -> IO (Either AuthFailure AuthUser)
-  -- | Find the user with this username
-  lookupByName :: r
-          -> Text
-             -- ^ Username
-          -> IO (Maybe AuthUser)
-  -- | Find the user with this ID
-  lookupById :: r
-          -> UserId
-             -- ^ User's ID
-          -> IO (Maybe AuthUser)
-  -- | Delete the user from the database
-  delete :: r
-         -> UserId
-         -- ^ User's ID
-         -> IO ()

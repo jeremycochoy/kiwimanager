@@ -29,8 +29,16 @@
       <td><userLastIg /></td>
     </tr>
     <tr>
-      <td>Is your account activated:</td>
-      <td><userActive/></td>
+      <td>Last IP used:</td>
+      <td><userLastLoginIp /></td>
+    </tr>
+    <tr>
+      <td>Is your account banned:</td>
+      <td><userBanned /></td>
+    </tr>
+    <tr>
+      <td>Is your account verified:</td>
+      <td><userVerified /></td>
     </tr>
   </table>
 </apply>

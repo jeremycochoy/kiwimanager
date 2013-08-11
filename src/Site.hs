@@ -9,6 +9,8 @@ module Site
   ) where
 
 ------------------------------------------------------------------------------
+import           Control.Monad
+import           Control.Monad.Trans.Maybe
 import           Control.Applicative
 import           Data.ByteString (ByteString)
 import           Snap
@@ -32,6 +34,7 @@ import qualified KiwiAuthManager as KAM
 import           KiwiBackend
 import qualified Types as K
 import           Utils
+import           Character
 
 ------------------------------------------------------------------------------
 -- | Display a login form with error messages
@@ -104,30 +107,55 @@ handleLogout = logout >> redirect "/"
 -- | Show account informations
 handleAccount :: Handler App App ()
 handleAccount = do
-  mbAuthUser <- with auth $ currentUser
-  case mbAuthUser of
-    Nothing -> redirect "/"
-    Just authUser -> case userId authUser of
-      Nothing -> redirect "/"
-      Just uid -> do
-        let authSplices = userISplices authUser
-        kiwiDB <- gets _kiwiDB
-        infos  <-liftIO $ getUserInfos kiwiDB uid
-        let userInfosSplices = map (\(a, b) -> (T.pack a, textSplice . T.pack $ b)) infos
-        let splices = userInfosSplices ++ authSplices
-        renderAccount splices
+  mbSplices <- runMaybeT $ do
+    --Get resources
+    authUser <- MaybeT . with auth $ currentUser
+    userId <- MaybeT . return $ userId authUser
+    kiwiDB <- lift $ gets _kiwiDB
+    infos <- liftIO $ getUserInfos kiwiDB userId
+    -- Compute splices
+    let authSplices = userISplices authUser
+    let userInfosSplices = map (\(a, b) -> (T.pack a, textSplice . T.pack $ b)) infos
+    return $ authSplices ++ userInfosSplices
+  -- If the user isn't connected (no splices), redirect.
+  maybe (redirect "/") renderAccount mbSplices
   where
-    renderAccount splices = heistLocal (bindSplices splices) $ render "account"
+    renderAccount accSplices = heistLocal (bindSplices accSplices) $ render "account"
 
+redirectNonAuth :: Handler App App ()
+redirectNonAuth = do
+  mbAuthUser <- with auth $ currentUser
+  if mbAuthUser == Nothing
+     then redirect "/"
+     else return ()
+
+------------------------------------------------------------------------------
+-- | Show characters
+handleCharacters :: Handler App App ()
+handleCharacters = do
+  redirectNonAuth
+  mbCharacters <- runMaybeT $ do
+    --Get resources
+    authUser <- MaybeT . with auth $ currentUser
+    id <- MaybeT . return $ userId authUser
+    kiwiDB <- lift $ gets _kiwiDB
+    liftIO $ getCharacters kiwiDB id
+  let characters = maybe ([]) id mbCharacters
+  let splices = bindSplices [("character", renderCharacters characters)]
+  heistLocal splices $ render "characters"
+  where
+    renderCharacters = mapSplices renderCharacter
+    renderCharacter = runChildrenWithText . characterToList
 
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
-routes = [ ("",          serveDirectory "static")
-         , ("login",     with auth handleLogin)
-         , ("register",  with auth handleRegister)
-         , ("logout",    with auth handleLogout)
-         , ("account",   handleAccount)
+routes = [ ("",           serveDirectory "static")
+         , ("login",      with auth handleLogin)
+         , ("register",   with auth handleRegister)
+         , ("logout",     with auth handleLogout)
+         , ("characters", handleCharacters)
+         , ("account",    handleAccount)
          ]
 
 ------------------------------------------------------------------------------

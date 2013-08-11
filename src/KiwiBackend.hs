@@ -4,7 +4,11 @@
 module KiwiBackend
     ( KiwiBackend,
       initSqliteKiwiBackend,
-      getUserInfos
+      getUserInfos,
+      addUser,
+      getUserByName,
+      getUserById,
+      getCharacters,
     ) where
 
 import           Control.Monad
@@ -18,8 +22,9 @@ import qualified Data.HashMap.Strict as HM
 import qualified Data.Aeson.Types as V
 import qualified Data.Text.Encoding as E
 import           Data.ByteString (ByteString)
+import           Character
 
-import           KiwiAuthManager
+
 import           Utils
 import           Config
 
@@ -94,12 +99,13 @@ getUserInfos :: KiwiBackend -> UserId -> IO [(String, String)]
 getUserInfos KiwiBackend{..} id = do
   rows <- quickQuery' connection query [toSql (read . T.unpack . unUid $ id :: Int)]
   return $ case rows of
-    row : _ -> zip fields (map fromSql row)
+    row : _ -> zip fields (map getVal row)
     _       -> []
   where
+    getVal = either (\_ -> "") (\s -> s) . safeFromSql
     fields = ["userName", "userEmail", "userFirstName", "userLastName", "userBirthday",
               "userLastLoginIp", "userLastLoginAt", "userCreatedAt"]
-    query = "SELECT `name`, `email`, `first_name`, `last_name`, `birthday`, `lastLoginIp`, `lastLoginAt`, `createdAt` FROM `" ++ userTable ++ "` WHERE `id`=?"
+    query = "SELECT `name`, `email`, `first_name`, `last_name`, `birthday`, lastLoginIp, lastLoginAt, createdAt FROM `" ++ userTable ++ "` WHERE `id`=?"
 
 addUser :: KiwiBackend
            -- ^ Kiwi Backend
@@ -123,11 +129,26 @@ addUser b@KiwiBackend{..} username password salt email = do
   where
     query = "INSERT INTO `" ++ userTable ++ "` (`name`, `password`, `salt`, `email`) VALUES (?, ?, ?, ?)"
 
-
-instance KiwiAuthBackend KiwiBackend where
-  --TODO : do not allow any characters for field username
-  register = addUser
-  lookupByName = getUserByName
-  lookupById = getUserById
-  delete = error "delete not yet implemented"
+getCharacters :: KiwiBackend -> UserId -> IO [Character]
+getCharacters KiwiBackend{..} userId = do
+  rows <- quickQuery' connection query [toSql (read . T.unpack . unUid $ userId :: Int)]
+  return $ map computeChar rows
+  where
+    query = "SELECT `name`, `type`, `lvl`, `state_pts`, `int`, `for`, `dex`, `agi`, "
+            ++ "`vit`, `exp`, `pos_x`, `pos_y` "
+            ++ "FROM `" ++ characterTable ++ "` WHERE `user_id`=?"
+    computeChar [name, ctype, lvl, statePts, int, str, dex, agi, vit, exp, posX, posY] =
+      Character { cName     = fromSql name
+                , cLevel    = fromSql ctype
+                , cType     = fromSql lvl
+                , cStatePts = fromSql statePts
+                , cInt      = fromSql int
+                , cStr      = fromSql str
+                , cDex      = fromSql dex
+                , cAgi      = fromSql agi
+                , cVit      = fromSql vit
+                , cExp      = fromSql exp
+                , cPosX     = fromSql posX
+                , cPosY     = fromSql posY
+                }
 
