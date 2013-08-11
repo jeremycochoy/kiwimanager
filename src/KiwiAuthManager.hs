@@ -20,6 +20,7 @@ import qualified Snap.Snaplet.Auth as A
 import           Snap.Snaplet.Session
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Char8 as B8
 import           Web.ClientSession (getKey)
 import           Control.Error
 import qualified Data.Aeson.Types as V
@@ -104,10 +105,9 @@ loginUser' unf pwdf remf = do
 
     --TODO: Rewrite using our own error type!
     salt <- noteT (AuthError "salt") . hoistMaybe $
-            fromMeta <$> HM.lookup "salt" (userMeta authUser)
+            (fromHex . fromMeta) <$> HM.lookup "salt" (userMeta authUser)
     let cPassword = hashPassword salt password
 
-    error. show $ (password, userPassword authUser, salt, cPassword)
     EitherT $ loginByUsername tUsername
                               (ClearText cPassword) remember
 
@@ -195,7 +195,7 @@ registerUser' Configuration{..} unf pwdf pwdcf ef = do
                , userLogin = username
                -- We are lying, the password is actualy encrypted
                , userPassword = Just $ ClearText cryptedPassword
-               , userMeta = HM.fromList ["salt" `quickMeta` salt]
+               , userMeta = HM.fromList ["salt" `quickMeta` toHex salt]
                }
 
     eAuth <- lift $ saveUser authUser

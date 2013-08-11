@@ -22,6 +22,7 @@ import qualified Data.HashMap.Strict as HM
 import qualified Data.Aeson.Types as V
 import qualified Data.Text.Encoding as E
 import           Data.ByteString (ByteString)
+import qualified Data.ByteString as B
 import           Character
 
 
@@ -82,13 +83,13 @@ getUserById KiwiBackend{..} id = do
 computeRows :: [[SqlValue]] -> IO (Maybe AuthUser)
 computeRows rows = case rows of
   [] -> return Nothing
-  row : _ -> let [id, name, password, email, salt, lli, lla, ca] = row in
+  row : _ -> let [id, name, password, email, salt, lli, lla, ca] = row in do
     return $ Just defAuthUser
         { userId = Just UserId {unUid = T.pack . show $ (fromSql id :: Int)}
         , userLogin = fromSql name
         , userPassword = Just . ClearText . fromSql $ password
         , userEmail = fromSql email
-        , userMeta = HM.fromList ["salt" `quickMeta` fromSql salt]
+        , userMeta = HM.fromList ["salt" `quickMeta` (drop 2 . fromSql $ salt)]
         }
 
 getUserInfos :: KiwiBackend -> UserId -> IO [(String, String)]
@@ -109,7 +110,7 @@ addUser :: KiwiBackend
            -- ^ Username
         -> ByteString
            -- ^ Crypted password
-        -> ByteString
+        -> String
            -- ^ Salt
         -> T.Text
            -- ^ Email
@@ -123,7 +124,7 @@ addUser b@KiwiBackend{..} username password salt email = do
   commit connection
   return . Right . fromJust $ mbAuthUser
   where
-    query = "INSERT INTO " ++ userTable ++ " (name, password, salt, email) VALUES (?, ?, E'\\x" ++ toHex salt ++ "', ?)"
+    query = "INSERT INTO " ++ userTable ++ " (name, password, salt, email) VALUES (?, ?, E'\\\\x" ++ salt ++ "', ?)"
 
 getCharacters :: KiwiBackend -> UserId -> IO [Character]
 getCharacters KiwiBackend{..} userId = do
