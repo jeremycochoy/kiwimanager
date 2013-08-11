@@ -29,7 +29,7 @@
       <td><input type="text" name="email" size="20" /></td>
     </tr>
     <tr>
-      <td collspan="2" id="submit_cell"><input type="submit" value="Register" /></td>
+      <td colspan="2" id="submit_cell"><input type="submit" value="Register" /></td>
     </tr>
   </table>
 </form>
