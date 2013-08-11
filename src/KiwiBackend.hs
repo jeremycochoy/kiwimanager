@@ -101,8 +101,8 @@ getUserInfos KiwiBackend{..} id = do
   where
     getVal = either (\_ -> "") (\s -> s) . safeFromSql
     fields = ["userName", "userEmail", "userFirstName", "userLastName", "userBirthday",
-              "userLastLoginIp", "userLastLoginAt", "userCreatedAt"]
-    query = "SELECT name, email, first_name, last_name, birthday, last_login_ip, last_login_at, created_at FROM " ++ userTable ++ " WHERE id=?"
+              "userLastLoginIp", "userLastLoginAt", "userCreatedAt", "userVerified", "userLogged"]
+    query = "SELECT name, email, first_name, last_name, birthday, last_login_ip, last_login_at, created_at, verified, logged FROM " ++ userTable ++ " WHERE id=?"
 
 addUser :: KiwiBackend
            -- ^ Kiwi Backend

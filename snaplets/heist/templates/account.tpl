@@ -21,20 +21,16 @@
       <td><userBirthday /></td>
     </tr>
     <tr>
-      <td>Last web connection:</td>
+      <td>Last connection:</td>
       <td><userLastLoginAt /></td>
-    </tr>
-    <tr>
-      <td>Last in game connection:</td>
-      <td><userLastIg /></td>
     </tr>
     <tr>
       <td>Last IP used:</td>
       <td><userLastLoginIp /></td>
     </tr>
     <tr>
-      <td>Is your account banned:</td>
-      <td><userBanned /></td>
+      <td>Is your account logged:</td>
+      <td><userLogged /></td>
     </tr>
     <tr>
       <td>Is your account verified:</td>
