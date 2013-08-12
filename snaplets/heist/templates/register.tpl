@@ -9,16 +9,14 @@
       <td><input type="text" name="login" size="20" /></td>
     </tr>
     <tr class="desc">
-      <td>Must be between <minUserLen/> and <maxUserLen/> characters. </td>
-      <td></td>
+      <td colspan="2">Must be between <minUserLen/> and <maxUserLen/> characters. </td>
     </tr>
     <tr>
       <td>Password:</td>
       <td><input type="password" name="password" size="20" /></td>
     </tr>
     <tr class="desc">
-      <td>Must have more than <minPasswordLen/> characters. </td>
-      <td></td>
+      <td colspan="2">Must have more than <minPasswordLen/> characters. </td>
     </tr>
     <tr>
       <td>Confirm password:</td>
