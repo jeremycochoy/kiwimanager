@@ -1,40 +1,40 @@
 <apply template="_base">
   <table id="account_inf">
-    <tr>
-      <td>Login:</td>
-      <td><userLogin /></td>
+    <tr class="login">
+      <td class="login cellL">Login:</td>
+      <td class="login cellR"><userLogin /></td>
     </tr>
-    <tr>
-      <td>E-Mail:</td>
-      <td><userEmail /></td>
+    <tr class="email">
+      <td class="email cellL">E-Mail:</td>
+      <td class="email cellR"><userEmail /></td>
     </tr>
-    <tr>
-      <td>First name:</td>
-      <td><userFirstName /></td>
+    <tr class="first_name">
+      <td class="first_name cellL">First name:</td>
+      <td class="first_name cellR"><userFirstName /></td>
     </tr>
-    <tr>
-      <td>Last name:</td>
-      <td><userLastName /></td>
+    <tr class="last_name">
+      <td class="last_name cellL">Last name:</td>
+      <td class="last_name cellR"><userLastName /></td>
     </tr>
-    <tr>
-      <td>Birthday:</td>
-      <td><userBirthday /></td>
+    <tr class="birthday">
+      <td class="birthday cellL">Birthday:</td>
+      <td class="birthday cellR"><userBirthday /></td>
     </tr>
-    <tr>
-      <td>Last connection:</td>
-      <td><userLastLoginAt /></td>
+    <tr class="last_connection">
+      <td class="last_connection cellL">Last connection:</td>
+      <td class="last_connection cellR"><userLastLoginAt /></td>
     </tr>
-    <tr>
-      <td>Last IP used:</td>
-      <td><userLastLoginIp /></td>
+    <tr class="last_ip">
+      <td class="last_ip cellL">Last IP used:</td>
+      <td class="last_ip cellR"><userLastLoginIp /></td>
     </tr>
-    <tr>
-      <td>Is your account logged:</td>
-      <td><userLogged /></td>
+    <tr class="logged">
+      <td class="logged cellL">Is your account logged:</td>
+      <td class="logged cellR"><userLogged /></td>
     </tr>
-    <tr>
-      <td>Is your account verified:</td>
-      <td><userVerified /></td>
+    <tr class="verified">
+      <td class="verified cellL">Is your account verified:</td>
+      <td class="verified cellR"><userVerified /></td>
     </tr>
   </table>
 </apply>
