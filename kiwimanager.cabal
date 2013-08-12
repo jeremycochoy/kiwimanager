@@ -35,10 +35,7 @@ Executable kiwimanager
     time                      >= 1.1     && < 1.5,
     transformers              >= 0.3,
     network                   >= 2.4.1.2,
-    -- We need to restric cipher-aes version to make clientsession compile.
     clientsession             >= 0.9,
-    cipher-aes                >= 0.1.8   && < 0.2,
-    --
     HDBC                      >= 2.3,
     HDBC-postgresql           >= 2.3.2.1,
     errors                    >= 1.4,
