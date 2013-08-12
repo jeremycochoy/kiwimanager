@@ -1,5 +1,5 @@
 <apply template="_base">
-    <p>
+    <p id="head_char">
       Voici la liste de vos personnages :
     </p>
     <character>
@@ -25,7 +25,7 @@
         </tr>
         <tr class="str">
           <td class="str cellL">Strength: </td>
-          <td class="str cellL"><characterStr /></td>
+          <td class="str cellR"><characterStr /></td>
         </tr>
         <tr class="dex">
           <td class="dex cellL">Dexterity: </td>
