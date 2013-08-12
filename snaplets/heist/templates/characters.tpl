@@ -3,7 +3,7 @@
       Voici la liste de vos personnages :
     </p>
     <character>
-      <table class="character">
+      <table class="character type_<characterType/>">
         <tr class="character_name">
           <th colspan="2" id="c_name"><characterName /></th>
         </tr>
