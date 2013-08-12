@@ -4,38 +4,48 @@
     </p>
     <character>
       <table class="character">
-        <tr>
+        <tr class="character_name">
           <th colspan="2" id="c_name"><characterName /></th>
         </tr>
-        <tr id="level">
-          <td>Level: </td><td><characterLevel /></td>
+        <tr class="level">
+          <td class="level cellL">Level: </td>
+          <td class="level cellR"><characterLevel /></td>
         </tr>
-        <tr id="type">
-          <td>Class: </td><td><characterType /></td>
+        <tr class="type">
+          <td class="type cellL">Class: </td>
+          <td class="type cellR"><characterType /></td>
         </tr>
-        <tr id="st_pts">
-          <td>State points: </td><td><characterStatePts /></td>
+        <tr class="st_pts">
+          <td class="st_pts cellL">State points: </td>
+          <td class="st_pts cellR"><characterStatePts /></td>
         </tr>
-        <tr id="int">
-          <td>Inteligence: </td><td><characterInt /></td>
+        <tr class="int">
+          <td class="int cellL">Inteligence: </td>
+          <td class="int cellR"><characterInt /></td>
         </tr>
-        <tr id="str">
-          <td>Strength: </td><td><characterStr /></td>
+        <tr class="str">
+          <td class="str cellL">Strength: </td>
+          <td class="str cellL"><characterStr /></td>
         </tr>
-        <tr id="dex">
-          <td>Dexterity: </td><td><characterDex /></td>
+        <tr class="dex">
+          <td class="dex cellL">Dexterity: </td>
+          <td class="dex cellR"><characterDex /></td>
         </tr>
-        <tr id="agi">
-          <td>Agility: </td><td><characterAgi /></td>
+        <tr class="agi">
+          <td class="agi cellL">Agility: </td>
+          <td class="agi cellR"><characterAgi /></td>
         </tr>
-        <tr id="vit">
-          <td>Vitality: </td><td><characterVit /></td>
+        <tr class="vit">
+          <td class="vit cellL">Vitality: </td>
+          <td class="vit cellR"><characterVit /></td>
         </tr>
-        <tr id="exp">
-          <td>Experience: </td><td><characterExp /></td>
+        <tr class="exp">
+          <td class="exp cellL">Experience: </td>
+          <td class="exp cellR"><characterExp /></td>
         </tr>
-        <tr id="loc">
-          <td>Coordinates: </td><td><characterPosX /> - <characterPosY /></td>
+        <tr class="loc">
+          <td class="loc cellL">Coordinates: </td>
+          <td class="loc cellR"><span class="cX"><characterPosX /></span> - <span class="cY"><characterPosY /></span></td>
         </tr>
       </table>
     </character>
