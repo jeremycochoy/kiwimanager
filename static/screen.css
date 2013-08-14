@@ -43,6 +43,7 @@ a
 #nav ul
 {
     text-align:right;
+    background-color:#A0CB0F;
     background-image:linear-gradient(to left, #679B00, #DAFB1F);
     padding-top:0.1em;
     padding-bottom:0.1em;
@@ -294,28 +295,31 @@ left:0.6em;
 
 .type_priest
 {
+    background-color:#8492FF;
     background-image:radial-gradient(#A8B2FF,#6073FF);
 }
 
 .type_mage
 {
+    background-color:#DB1E0F;
     background-image:radial-gradient(#FF1D0B,#B82014);
 }
 
 .type_archer
 {
+    background-color:#8FCF2D;
     background-image:radial-gradient(#9BED00,#84B22D);
 }
 
 .type_warrior
 {
-
+    background-color:#C3C9B6;
     background-image:radial-gradient(white,#88946E);
 }
 
 .type_thief
 {
-
+    background-color:#DCDC37;
     background-image:radial-gradient(#E9E954,#D0D01B);
 }
 
@@ -323,7 +327,7 @@ left:0.6em;
 
 .type_enginee
 {
-
+    background-color:#E77D22;
     background-image:radial-gradient(#FF8C29,#D06F1B);
 }
 
