@@ -48,7 +48,7 @@ a
     padding-top:0.1em;
     padding-bottom:0.1em;
     padding-right:5%;
-    paddin-right:5%;
+    padding-left:5%;
 }
 
 #nav ul li
@@ -67,7 +67,7 @@ a
     padding-left:0.4em;
     padding-right:0.5em;
     padding-top:0em;
-    padding-botton:0em;
+    padding-bottom:0em;
     border-right:0em;
     border-left:0.1em solid white;
 }
@@ -78,7 +78,7 @@ a
    background-image:linear-gradient(to left, #2E7509, #3AA600);
    border-bottom: 0.1em dotted white;
    padding-top:0em;
-   padding-botton:0em;
+   padding-bottom:0em;
 }
 
 input[type="submit"]
@@ -152,7 +152,6 @@ left:0.6em;
     font-family:georgia,serif;
     text-align:center;
     font-size:1.3em;
-    float:center;
     margin-left:auto;
     margin-right:auto;
 }
@@ -195,7 +194,6 @@ left:0.6em;
     padding-top:0.25em;
     padding-bottom:0.25em;
     border:0.2em solid white;
-    vertical-align:center;
 }
 .login
 {
@@ -346,7 +344,6 @@ left:0.6em;
     font-family:georgia,serif;
     text-align:center;
     font-size:1.3em;
-    float:center;
     margin-left:auto;
     margin-right:auto;
 }
